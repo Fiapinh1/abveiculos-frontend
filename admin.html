@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Sistema de Gestão</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+                .sidebar { transition: transform 0.3s ease; height: 100vh; position: fixed; top: 0; left: 0; width: 256px; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 1000; transform: translateX(0); }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+        .sidebar-overlay.active { display: block; }
+                @media (max-width: 1024px) { 
+            .sidebar { 
+                transform: translateX(-100%) !important;
+            }
+            .sidebar.open { 
+                transform: translateX(0) !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+        .main-content { margin-left: 256px; min-height: 100vh; }
+        @media (max-width: 1024px) { .main-content { margin-left: 0; } }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 9999; animation: slideIn 0.3s ease; min-width: 300px; }
+        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+        .dropzone { border: 2px dashed #cbd5e0; transition: all 0.3s ease; cursor: pointer; background: #f7fafc; }
+        .dropzone.dragover { border-color: #667eea; background: #edf2f7; transform: scale(1.02); }
+        .preview-img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; }
+        .menu-item.active { background: #f3f4f6; color: #667eea; font-weight: 600; }
+        .modal-overlay { backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <aside id="sidebar" class="sidebar">
+        <div class="h-full flex flex-col">
+            <div class="gradient-bg p-6 text-white">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="car" class="w-8 h-8"></i>
+                    <div>
+                        <h1 class="text-xl font-bold" id="nomeLoja">Alysson Bruno</h1>
+                        <p class="text-xs opacity-90">Painel Admin</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 overflow-y-auto">
+                <button onclick="mostrarAba('dashboard')" class="menu-item active w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Dashboard</span>
+                </button>
+                <button onclick="mostrarAba('veiculos')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="veiculos">
+                    <i data-lucide="car-front" class="w-5 h-5"></i><span>Veículos</span>
+                </button>
+                <button onclick="mostrarAba('leads')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="leads">
+                    <i data-lucide="users" class="w-5 h-5"></i><span>Leads</span>
+                </button>
+                <button onclick="mostrarAba('despesas')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="despesas">
+                    <i data-lucide="receipt" class="w-5 h-5"></i><span>Despesas</span>
+                </button>
+            </nav>
+            <div class="p-4 border-t">
+                <button onclick="mostrarAba('clientes')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="clientes">
+                    <i data-lucide="users" class="w-5 h-5"></i><span>Clientes</span>
+                </button>
+                <button onclick="sair()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 transition">
+                    <i data-lucide="log-out" class="w-5 h-5"></i><span>Sair</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay do menu mobile -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="main-content">
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition">
+                        <i data-lucide="menu" class="w-6 h-6 text-gray-700"></i>
+                    </button>
+                    <h2 id="tituloAba" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                </div>
+                <button onclick="carregarDados()" class="p-2 hover:bg-gray-100 rounded-lg transition" title="Atualizar dados">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="p-6">
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-blue-100 p-3 rounded-lg"><i data-lucide="car" class="w-6 h-6 text-blue-600"></i></div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-800" id="statEstoque">0</p>
+                        <p class="text-sm text-gray-600 mt-1">Em Estoque</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-green-100 p-3 rounded-lg"><i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i></div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-800" id="statVendidos">0</p>
+                        <p class="text-sm text-gray-600 mt-1">Vendidos</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-purple-100 p-3 rounded-lg"><i data-lucide="dollar-sign" class="w-6 h-6 text-purple-600"></i></div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-800" id="statLucro">R$ 0</p>
+                        <p class="text-sm text-gray-600 mt-1">Lucro Total</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-yellow-100 p-3 rounded-lg"><i data-lucide="users" class="w-6 h-6 text-yellow-600"></i></div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-800" id="statLeads">0</p>
+                        <p class="text-sm text-gray-600 mt-1">Leads Recebidos</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-veiculos" class="tab-content">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-800">Gerenciar Veículos</h3>
+                        <button onclick="abrirModalVeiculo()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>Adicionar Veículo
+                        </button>
+                    </div>
+                    <div id="listaVeiculos" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div id="tab-leads" class="tab-content">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">Gerenciar Leads</h3>
+                    <div id="listaLeads" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div id="tab-despesas" class="tab-content">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-800">Gerenciar Despesas</h3>
+                        <button onclick="abrirModalDespesa()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>Adicionar Despesa
+                        </button>
+                    </div>
+                    <div id="listaDespesas" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div id="tab-clientes" class="tab-content">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-800">Clientes Cadastrados</h3>
+                        <button onclick="abrirModalCliente()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
+                            <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>Adicionar Cliente
+                        </button>
+                    </div>
+                    <div id="listaClientes" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div id="tab-detalhes" class="tab-content">
+                <div class="bg-white rounded-xl shadow-lg">
+                    <!-- Header -->
+                    <div class="flex items-center gap-4 p-6 border-b">
+                        <button onclick="fecharDetalhes()" class="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition font-medium">
+                            <i data-lucide="arrow-left" class="w-5 h-5"></i> Voltar
+                        </button>
+                        <div>
+                            <h2 id="det_titulo" class="text-2xl font-bold text-gray-800"></h2>
+                            <p id="det_subtitulo" class="text-gray-500 text-sm"></p>
+                        </div>
+                        <div class="ml-auto flex gap-2">
+                            <button id="det_btnEditar" onclick="" class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium">
+                                <i data-lucide="edit" class="w-4 h-4"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="det_loading" class="flex items-center justify-center py-20">
+                        <i data-lucide="loader-2" class="w-10 h-10 text-purple-600 animate-spin"></i>
+                    </div>
+
+                    <div id="det_conteudo" class="hidden p-6 space-y-8">
+                        <!-- Galeria + Info principal -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Galeria -->
+                            <div>
+                                <div class="relative bg-gray-100 rounded-xl overflow-hidden aspect-video">
+                                    <img id="det_fotoPrincipal" src="" alt="" class="w-full h-full object-cover">
+                                    <span id="det_badgeDestaque" class="hidden absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">⭐ Destaque</span>
+                                </div>
+                                <div id="det_miniaturas" class="flex gap-2 mt-3 flex-wrap"></div>
+                            </div>
+                            <!-- Dados principais -->
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <p class="text-xs text-gray-400">Ano</p>
+                                        <p id="det_ano" class="font-semibold text-gray-800"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <p class="text-xs text-gray-400">KM</p>
+                                        <p id="det_km" class="font-semibold text-gray-800"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <p class="text-xs text-gray-400">Cor</p>
+                                        <p id="det_cor" class="font-semibold text-gray-800"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <p class="text-xs text-gray-400">Placa</p>
+                                        <p id="det_placa" class="font-semibold text-gray-800"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <p class="text-xs text-gray-400">Câmbio</p>
+                                        <p id="det_cambio" class="font-semibold text-gray-800"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <p class="text-xs text-gray-400">Combustível</p>
+                                        <p id="det_combustivel" class="font-semibold text-gray-800"></p>
+                                    </div>
+                                </div>
+                                <!-- Financeiro -->
+                                <div class="border border-gray-200 rounded-xl p-4 space-y-2">
+                                    <h4 class="font-semibold text-gray-700 mb-3">Financeiro</h4>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-500">Valor de Compra</span>
+                                        <span id="det_compra" class="font-medium text-gray-800"></span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-500">Custos Adicionais</span>
+                                        <span id="det_custos" class="font-medium text-gray-800"></span>
+                                    </div>
+                                    <div class="flex justify-between text-sm border-t pt-2 mt-2">
+                                        <span class="text-gray-500">Investimento Total</span>
+                                        <span id="det_investimento" class="font-medium text-gray-800"></span>
+                                    </div>
+                                    <div class="flex justify-between text-sm font-semibold text-lg pt-1">
+                                        <span class="text-gray-700">Valor Anunciado</span>
+                                        <span id="det_anunciado" class="text-purple-600"></span>
+                                    </div>
+                                    <div class="flex justify-between text-sm border-t pt-2">
+                                        <span class="text-gray-500">Lucro Estimado</span>
+                                        <span id="det_lucro" class="font-semibold"></span>
+                                    </div>
+                                </div>
+                                <!-- Status -->
+                                <div class="flex items-center gap-3">
+                                    <span id="det_status" class="px-4 py-2 rounded-full text-sm font-semibold"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Opcionais -->
+                        <div id="det_secaoOpcionais" class="hidden">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3">Opcionais</h3>
+                            <div id="det_opcionais" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <!-- Descrição -->
+                        <div id="det_secaoDescricao" class="hidden">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3">Descrição</h3>
+                            <p id="det_descricao" class="text-gray-600 leading-relaxed"></p>
+                        </div>
+
+                        <!-- Fotos extras -->
+                        <div id="det_secaoFotos" class="hidden">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3">Galeria de Fotos</h3>
+                            <div id="det_galeria" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+
+    <!-- Modal Progresso Upload -->
+    <div id="modalProgresso" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="upload-cloud" class="w-8 h-8 text-purple-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-1">Enviando fotos...</h3>
+            <p id="progressoTexto" class="text-sm text-gray-500 mb-5">0 de 0</p>
+            <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-2">
+                <div id="progressoBarra" class="bg-purple-600 h-4 rounded-full transition-all duration-300" style="width:0%"></div>
+            </div>
+            <p id="progressoPct" class="text-sm font-semibold text-purple-600 mt-2">0%</p>
+        </div>
+    </div>
+
+    <!-- Modal Confirmação Personalizado -->
+    <div id="modalConfirm" class="hidden fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+            <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="alert-triangle" class="w-7 h-7 text-red-500"></i>
+            </div>
+            <h3 id="confirmTitulo" class="text-xl font-bold text-gray-800 mb-2">Confirmar</h3>
+            <p id="confirmMensagem" class="text-gray-500 text-sm mb-6">Tem certeza?</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="fecharConfirm(false)" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition">Cancelar</button>
+                <button id="confirmBtnOk" onclick="fecharConfirm(true)" class="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalVeiculo" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <h3 class="text-2xl font-bold text-gray-800" id="modalVeiculoTitulo">Adicionar Veículo</h3>
+                <button onclick="fecharModalVeiculo()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="formVeiculo" onsubmit="salvarVeiculo(event)" class="space-y-6">
+                    <input type="hidden" id="veiculoId">
+                    <input type="hidden" id="veiculoPastaId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Marca*</label>
+                            <input type="text" id="marca" list="listaMarcas" required 
+                                   onchange="atualizarModelos()" 
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <datalist id="listaMarcas"></datalist>
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Modelo*</label>
+                            <input type="text" id="modelo" list="listaModelos" required 
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <datalist id="listaModelos"></datalist>
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Ano*</label>
+                            <input type="number" id="ano" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">KM*</label>
+                            <input type="number" id="km" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Cor*</label>
+                            <input type="text" id="cor" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Placa</label>
+                            <input type="text" id="placa" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Câmbio*</label>
+                            <select id="cambio" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                <option value="">Selecione</option><option value="Manual">Manual</option><option value="Automático">Automático</option>
+                            </select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Combustível*</label>
+                            <select id="combustivel" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                <option value="">Selecione</option><option value="Flex">Flex</option><option value="Gasolina">Gasolina</option><option value="Diesel">Diesel</option><option value="Elétrico">Elétrico</option>
+                            </select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Valor Compra*</label>
+                            <input type="number" id="valor_compra" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Custos Adicionais</label>
+                            <input type="number" id="custos_adicionais" value="0" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Valor Anunciado*</label>
+                            <input type="number" id="valor_anunciado" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Status*</label>
+                            <select id="status" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                <option value="Disponível">Disponível</option><option value="Vendido">Vendido</option><option value="Reservado">Reservado</option>
+                            </select></div>
+                        <div class="flex items-center gap-3 mt-2">
+                            <label class="block text-sm font-medium text-gray-700">Destaque</label>
+                            <button type="button" id="btnDestaque" onclick="toggleDestaque()"
+                                class="relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 bg-gray-300"
+                                aria-pressed="false">
+                                <span id="thumbDestaque" class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-1"></span>
+                            </button>
+                            <span id="labelDestaque" class="text-sm text-gray-500">Não</span>
+                            <input type="hidden" id="destaque" value="NAO">
+                        </div>
+                    </div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                        <textarea id="descricao" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></textarea></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Opcionais</label>
+                        <div class="border border-gray-300 rounded-lg p-4 max-h-64 overflow-y-auto">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="opcionaisGrid">
+                                <!-- Será preenchido via JS -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="opcionais">
+                    </div>
+                    <div id="uploadSection">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fotos do Veículo</label>
+                        <div id="dropzone" class="dropzone rounded-lg p-8 text-center" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+                            <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto mb-4 text-gray-400"></i>
+                            <p class="text-gray-600 font-medium">Arraste as fotos aqui ou clique para selecionar</p>
+                            <p class="text-sm text-gray-400 mt-2">JPG, PNG até 10MB cada</p>
+                        </div>
+                        <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
+                        <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-6 border-t">
+                        <button type="button" onclick="fecharModalVeiculo()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">Cancelar</button>
+                        <button type="submit" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium shadow-md">Salvar Veículo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalDespesa" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white rounded-xl max-w-md w-full shadow-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Adicionar Despesa</h3>
+                <button onclick="fecharModalDespesa()" class="p-2 hover:bg-gray-100 rounded-lg transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="formDespesa" onsubmit="salvarDespesa(event)" class="space-y-4">
+                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Descrição*</label>
+                        <input type="text" id="despesa_descricao" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Categoria*</label>
+                        <select id="despesa_categoria" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <option value="">Selecione</option><option value="Aluguel">Aluguel</option><option value="Água">Água</option><option value="Luz">Luz</option><option value="Internet">Internet</option><option value="Marketing">Marketing</option><option value="Outros">Outros</option>
+                        </select></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Valor*</label>
+                        <input type="number" id="despesa_valor" required step="0.01" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="fecharModalDespesa()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+                        <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <div id="modalCliente" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white rounded-xl max-w-lg w-full shadow-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="modalClienteTitulo">Adicionar Cliente</h3>
+                <button onclick="fecharModalCliente()" class="p-2 hover:bg-gray-100 rounded-lg transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="formCliente" onsubmit="salvarCliente(event)" class="space-y-4">
+                    <input type="hidden" id="clienteId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome Completo*</label>
+                            <input type="text" id="cliente_nome" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">CPF</label>
+                            <input type="text" id="cliente_cpf" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="000.000.000-00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                            <input type="text" id="cliente_telefone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="(34) 99999-9999">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                            <input type="email" id="cliente_email" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cidade</label>
+                            <input type="text" id="cliente_cidade" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                            <input type="text" id="cliente_estado" maxlength="2" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="MG">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                            <textarea id="cliente_observacoes" rows="2" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="fecharModalCliente()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+                        <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://loja-carros-backend.onrender.com/api';
+        
+
+const OPCIONAIS_DISPONIVEIS = ['Ar-condicionado', 'Direção hidráulica', 'Direção elétrica', 'Vidros elétricos', 'Travas elétricas', 'Retrovisores elétricos', 'Alarme', 'Air bag motorista', 'Air bag passageiro', 'Air bags laterais', 'ABS', 'Freios a disco', 'Sensor de estacionamento', 'Câmera de ré', 'Controle de tração', 'Controle de estabilidade', 'Piloto automático', 'Computador de bordo', 'Bancos em couro', 'Bancos aquecidos', 'Volante com regulagem de altura', 'Volante multifuncional', 'Rádio', 'CD player', 'Bluetooth', 'USB', 'Entrada auxiliar', 'Rodas de liga leve', 'Teto solar', 'Engate reboque', 'Rack de teto'];
+
+const MARCAS_MODELOS = {
+    'Volkswagen': ['Gol', 'Polo', 'Virtus', 'T-Cross', 'Nivus', 'Saveiro', 'Voyage', 'Fox', 'Up!'],
+    'Fiat': ['Uno', 'Argo', 'Mobi', 'Cronos', 'Pulse', 'Fastback', 'Toro', 'Strada', 'Palio', 'Punto'],
+    'Chevrolet': ['Onix', 'Tracker', 'S10', 'Montana', 'Spin', 'Cruze', 'Prisma', 'Celta'],
+    'Ford': ['Ka', 'EcoSport', 'Ranger', 'Fiesta', 'Fusion', 'Focus'],
+    'Hyundai': ['HB20', 'Creta', 'Tucson', 'i30', 'Santa Fe', 'Elantra', 'Azera'],
+    'Toyota': ['Corolla', 'Hilux', 'Yaris', 'SW4', 'RAV4', 'Etios', 'Camry'],
+    'Honda': ['Civic', 'City', 'HR-V', 'CR-V', 'Fit', 'WR-V', 'Accord'],
+    'Renault': ['Kwid', 'Sandero', 'Logan', 'Duster', 'Captur', 'Oroch', 'Fluence'],
+    'Nissan': ['Kicks', 'Versa', 'Frontier', 'Sentra', 'March', 'Livina'],
+    'Jeep': ['Renegade', 'Compass', 'Commander', 'Wrangler', 'Cherokee'],
+    'Peugeot': ['208', '2008', '3008', '5008', '308', '408'],
+    'Citroën': ['C3', 'C4 Cactus', 'Aircross', 'Berlingo'],
+    'Caoa Chery': ['Tiggo 5x', 'Tiggo 7', 'Tiggo 8', 'Arrizo 5', 'Arrizo 6'],
+    'BMW': ['320i', 'X1', 'X3', 'X5', 'Série 1', 'Série 3', 'Série 5'],
+    'Mercedes-Benz': ['Classe A', 'Classe C', 'GLA', 'GLC', 'Sprinter'],
+    'Audi': ['A3', 'A4', 'Q3', 'Q5', 'Q7'],
+    'Mitsubishi': ['L200', 'Outlander', 'ASX', 'Eclipse Cross'],
+    'BYD': ['Dolphin', 'Song Plus', 'Yuan Plus', 'Tan'],
+    'GWM': ['Haval H6', 'Poer', 'Ora 03']
+};
+
+        let todosVeiculos = [];
+        let todosLeads = [];
+        let todasDespesas = [];
+        let todosClientes = [];
+        let imagensSelecionadas = [];
+        let veiculoEditando = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacao();
+            popularMarcas();
+            carregarDados();
+            lucide.createIcons();
+        });
+
+        function verificarAutenticacao() {
+            const auth = localStorage.getItem('admin_autenticado');
+            const timestamp = localStorage.getItem('admin_timestamp');
+            if (!auth || !timestamp || Date.now() - parseInt(timestamp) > 8*60*60*1000) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        async function carregarDados() {
+            mostrarToast('Atualizando dados...', 'info');
+            await Promise.all([carregarDashboard(), carregarVeiculos(), carregarLeads(), carregarDespesas(), carregarClientes()]);
+            lucide.createIcons();
+        }
+
+        async function carregarDashboard() {
+            try {
+                const res = await fetch(`${API_URL}/dashboard`);
+                const result = await res.json();
+                if (result.success) {
+                    const d = result.data.resumo;
+                    document.getElementById('statEstoque').textContent = d.totalEstoque;
+                    document.getElementById('statVendidos').textContent = d.veiculosVendidos;
+                    document.getElementById('statLucro').textContent = formatarMoeda(d.lucroTotal);
+                    document.getElementById('statLeads').textContent = d.totalLeads;
+                }
+            } catch (e) { console.error('Erro ao carregar dashboard:', e); }
+        }
+
+        async function carregarVeiculos() {
+            try {
+                const res = await fetch(`${API_URL}/veiculos`);
+                const result = await res.json();
+                if (result.success) {
+                    todosVeiculos = result.data;
+                    renderizarVeiculos();
+                }
+            } catch (e) { mostrarToast('Erro ao carregar veículos', 'error'); }
+        }
+
+        function converterImagem(url) {
+            if (!url || url === '' || url === 'undefined' || url === 'null') return '';
+            // URL direta (Supabase Storage) — retornar sem modificar
+            if (url.startsWith('https://') || url.startsWith('http://')) return url;
+            // Legado: Google Drive
+            if (url.includes('drive.google.com')) {
+                const match = url.match(/[-\w]{25,}/);
+                if (match) return 'https://drive.google.com/thumbnail?id=' + match[0] + '&sz=w200';
+            }
+            return '';
+        }
+
+        function renderizarVeiculos() {
+            const lista = document.getElementById('listaVeiculos');
+            if (todosVeiculos.length === 0) {
+                lista.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum veículo cadastrado</p>';
+                return;
+            }
+            lista.innerHTML = todosVeiculos.map(v => `
+                <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition">
+                    <div class="p-4 flex gap-4">
+                        <img src="${converterImagem(v.imagem_principal)}" 
+                             alt="${v.marca} ${v.modelo}" 
+                             class="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                             onerror="this.src='https://placehold.co/96x96/e2e8f0/94a3b8?text=Sem+Foto'">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-lg text-gray-800">${v.marca} ${v.modelo} ${v.ano}</h4>
+                            <p class="text-sm text-gray-600">${formatarKm(v.km)} km • ${v.cambio} • ${v.combustivel}</p>
+                            <p class="text-purple-600 font-bold text-lg mt-1">${formatarMoeda(v.valor_anunciado)}</p>
+                            <div class="flex gap-2 mt-2 flex-wrap">
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${v.status==='Disponível'?'bg-green-100 text-green-800':v.status==='Vendido'?'bg-blue-100 text-blue-800':'bg-yellow-100 text-yellow-800'}">${v.status}</span>
+                                ${v.destaque ? '<span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">⭐ Destaque</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 px-4 py-3 flex gap-2">
+                        <button onclick="verVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 transition text-sm font-medium">
+                            <i data-lucide="eye" class="w-4 h-4"></i>Ver
+                        </button>
+                        <button onclick="editarVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-medium">
+                            <i data-lucide="edit" class="w-4 h-4"></i>Editar
+                        </button>
+                        <button onclick="excluirVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition text-sm font-medium">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>Excluir
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function abrirModalVeiculo() {
+            veiculoEditando = null;
+            document.getElementById('modalVeiculoTitulo').textContent = 'Adicionar Veículo';
+            document.getElementById('formVeiculo').reset();
+            document.getElementById('veiculoId').value = '';
+            document.getElementById('veiculoPastaId').value = '';
+            
+            // Popular opcionais quando abrir o modal
+            popularOpcionais();
+            document.querySelectorAll('#opcionaisGrid input[type="checkbox"]').forEach(cb => cb.checked = false);
+            
+            imagensSelecionadas = [];
+            document.getElementById('previewContainer').innerHTML = '';
+            // Resetar toggle destaque
+            setDestaque('NAO');
+            document.getElementById('modalVeiculo').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function fecharModalVeiculo() {
+            document.getElementById('modalVeiculo').classList.add('hidden');
+        }
+
+        async function editarVeiculo(id) {
+            veiculoEditando = id;
+            const veiculo = todosVeiculos.find(v => v.id === id);
+            if (!veiculo) return;
+            document.getElementById('modalVeiculoTitulo').textContent = 'Editar Veículo';
+            document.getElementById('veiculoId').value = veiculo.id;
+            // Extrair pastaId da URL da pasta_drive
+            let pastaIdEdit = '';
+            if (veiculo.pasta_drive) {
+                const match = veiculo.pasta_drive.match(/\/folders\/([a-zA-Z0-9-_]+)/);
+                if (match) pastaIdEdit = match[1];
+            }
+            document.getElementById('veiculoPastaId').value = pastaIdEdit;
+            console.log('Editando veículo ID:', veiculo.id, 'PastaID:', pastaIdEdit);
+            document.getElementById('marca').value = veiculo.marca;
+            document.getElementById('modelo').value = veiculo.modelo;
+            document.getElementById('ano').value = veiculo.ano;
+            document.getElementById('km').value = veiculo.km;
+            document.getElementById('cor').value = veiculo.cor;
+            document.getElementById('placa').value = veiculo.placa || '';
+            document.getElementById('cambio').value = veiculo.cambio;
+            document.getElementById('combustivel').value = veiculo.combustivel;
+            document.getElementById('valor_compra').value = veiculo.valor_compra;
+            document.getElementById('custos_adicionais').value = veiculo.custos_adicionais || 0;
+            document.getElementById('valor_anunciado').value = veiculo.valor_anunciado;
+            document.getElementById('status').value = veiculo.status;
+            document.getElementById('descricao').value = veiculo.descricao || '';
+            // Popular opcionais e marcar os salvos
+            popularOpcionais(veiculo.opcionais || '');
+            
+            imagensSelecionadas = [];
+            document.getElementById('previewContainer').innerHTML = '';
+            // Popular destaque
+            setDestaque(veiculo.destaque || 'NAO');
+            document.getElementById('modalVeiculo').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        async function salvarVeiculo(e) {
+            e.preventDefault();
+            const dados = {
+                marca: document.getElementById('marca').value,
+                modelo: document.getElementById('modelo').value,
+                ano: document.getElementById('ano').value,
+                km: document.getElementById('km').value,
+                cor: document.getElementById('cor').value,
+                placa: document.getElementById('placa').value,
+                cambio: document.getElementById('cambio').value,
+                combustivel: document.getElementById('combustivel').value,
+                valor_compra: document.getElementById('valor_compra').value,
+                custos_adicionais: document.getElementById('custos_adicionais').value || 0,
+                valor_anunciado: document.getElementById('valor_anunciado').value,
+                status: document.getElementById('status').value,
+                descricao: document.getElementById('descricao').value,
+                opcionais: document.getElementById('opcionais').value,
+                destaque: document.getElementById('destaque').value === 'SIM'
+            };
+            console.log('💾 Salvando veículo:', dados);
+            try {
+                let action = 'addVeiculo';
+                if (veiculoEditando) {
+                    action = 'updateVeiculo';
+                    dados.id = veiculoEditando;
+                }
+                const url = action === 'addVeiculo' ? `${API_URL}/veiculos` : `${API_URL}/veiculos/${veiculoEditando}`;
+                const method = action === 'addVeiculo' ? 'POST' : 'PUT';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+                const result = await res.json();
+                console.log('📊 Resultado do salvamento:', result);
+                if (result.success) {
+                    if (imagensSelecionadas.length > 0) {
+                        const veiculoIdParaUpload = result.data?.id || veiculoEditando;
+                        mostrarProgresso(imagensSelecionadas.length);
+                        // Desabilitar botão salvar
+                        document.querySelector('#formVeiculo [type="submit"]').disabled = true;
+                        try {
+                            let erros = 0;
+                            for (let imgIdx = 0; imgIdx < imagensSelecionadas.length; imgIdx++) {
+                                atualizarProgresso(imgIdx, imagensSelecionadas.length);
+                                const img = imagensSelecionadas[imgIdx];
+                                try {
+                                    // Converter base64 → Blob sem usar fetch() (bloqueado em file://)
+                                    const blob = dataURLparaBlob(img.base64);
+                                    const formData = new FormData();
+                                    formData.append('file', blob, img.nome);
+                                    formData.append('veiculoId', veiculoIdParaUpload);
+
+                                    const uploadRes = await fetch(`${API_URL}/upload`, {
+                                        method: 'POST',
+                                        body: formData
+                                    });
+                                    const uploadJson = await uploadRes.json();
+
+                                    if (uploadJson.success) {
+                                        // Registrar imagem na tabela imagens
+                                        await fetch(`${API_URL}/imagens`, {
+                                            method: 'POST',
+                                            headers: {'Content-Type': 'application/json'},
+                                            body: JSON.stringify({
+                                                veiculo_id: veiculoIdParaUpload,
+                                                url: uploadJson.url,
+                                                ordem: imgIdx
+                                            })
+                                        });
+                                        // 1ª imagem vira a capa do veículo
+                                        if (imgIdx === 0) {
+                                            await fetch(`${API_URL}/veiculos/${veiculoIdParaUpload}`, {
+                                                method: 'PUT',
+                                                headers: {'Content-Type': 'application/json'},
+                                                body: JSON.stringify({ imagem_principal: uploadJson.url })
+                                            });
+                                        }
+                                    } else {
+                                        console.error('Erro upload img', imgIdx + 1, uploadJson.error);
+                                        erros++;
+                                    }
+                                } catch(imgErr) {
+                                    console.error('Erro img ' + (imgIdx+1) + ':', imgErr);
+                                    erros++;
+                                }
+                            }
+                            atualizarProgresso(imagensSelecionadas.length, imagensSelecionadas.length);
+                            await new Promise(r => setTimeout(r, 400)); // breve pausa visual
+                            fecharProgresso();
+                            if (erros === 0) {
+                                mostrarToast('Veículo e ' + imagensSelecionadas.length + ' foto(s) salvas!', 'success');
+                            } else {
+                                mostrarToast('Veículo salvo. ' + erros + ' foto(s) com erro.', 'error');
+                            }
+                        } catch (uploadError) {
+                            fecharProgresso();
+                            console.error('❌ Erro ao enviar fotos:', uploadError);
+                            mostrarToast('Veículo salvo, mas erro ao enviar fotos', 'error');
+                        } finally {
+                            document.querySelector('#formVeiculo [type="submit"]').disabled = false;
+                        }
+                    } else {
+                        mostrarToast(veiculoEditando ? 'Veículo atualizado!' : 'Veículo adicionado!', 'success');
+                    }
+                    fecharModalVeiculo();
+                    await carregarVeiculos();
+                    await carregarDashboard();
+                } else {
+                    mostrarToast('Erro ao salvar veículo: ' + result.error, 'error');
+                }
+            } catch (e) {
+                console.error('❌ Erro:', e);
+                mostrarToast('Erro ao salvar veículo', 'error');
+            }
+        }
+
+        async function excluirVeiculo(id) {
+            const ok = await confirmar('Excluir Veículo', 'Esta ação não pode ser desfeita. Deseja continuar?');
+            if (!ok) return;
+            try {
+                const res = await fetch(`${API_URL}/veiculos/${id}`, {method: 'DELETE'});
+                const result = await res.json();
+                if (result.success) {
+                    mostrarToast('Veículo excluído!', 'success');
+                    await carregarVeiculos();
+                    await carregarDashboard();
+                }
+            } catch (e) { mostrarToast('Erro ao excluir veículo', 'error'); }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function verVeiculo(id) {
+            localStorage.setItem('veiculoDetalheId', id);
+            window.location.href = 'veiculos.detalhes.html';
+        }
+
+        async function abrirDetalhesVeiculo(v) {
+            // Switch tab
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-detalhes').classList.add('active');
+            document.getElementById('det_loading').classList.remove('hidden');
+            document.getElementById('det_conteudo').classList.add('hidden');
+
+            // Header
+            document.getElementById('det_titulo').textContent = v.marca + ' ' + v.modelo + ' ' + v.ano;
+            document.getElementById('det_subtitulo').textContent = v.placa || '';
+            document.getElementById('det_btnEditar').setAttribute('onclick', 'fecharDetalhes(); editarVeiculo(' + v.id + ')');
+
+            // Buscar dados completos (com imagens)
+            let vFull = v;
+            try {
+                const r = await fetch(API_URL + '/veiculos/' + v.id);
+                const rj = await r.json();
+                if (rj.success) vFull = rj.data;
+            } catch(e) {}
+
+            // Preencher campos
+            document.getElementById('det_ano').textContent = vFull.ano || '—';
+            document.getElementById('det_km').textContent = formatarKm(vFull.km) + ' km';
+            document.getElementById('det_cor').textContent = vFull.cor || '—';
+            document.getElementById('det_placa').textContent = vFull.placa || '—';
+            document.getElementById('det_cambio').textContent = vFull.cambio || '—';
+            document.getElementById('det_combustivel').textContent = vFull.combustivel || '—';
+
+            const compra = parseFloat(vFull.valor_compra) || 0;
+            const custos = parseFloat(vFull.custos_adicionais) || 0;
+            const anunciado = parseFloat(vFull.valor_anunciado) || 0;
+            const lucro = anunciado - compra - custos;
+            document.getElementById('det_compra').textContent = formatarMoeda(compra);
+            document.getElementById('det_custos').textContent = formatarMoeda(custos);
+            document.getElementById('det_investimento').textContent = formatarMoeda(compra + custos);
+            document.getElementById('det_anunciado').textContent = formatarMoeda(anunciado);
+            const elLucro = document.getElementById('det_lucro');
+            elLucro.textContent = formatarMoeda(lucro);
+            elLucro.className = 'font-semibold ' + (lucro >= 0 ? 'text-green-600' : 'text-red-600');
+
+            // Status badge
+            const st = document.getElementById('det_status');
+            st.textContent = vFull.status || '';
+            st.className = 'px-4 py-2 rounded-full text-sm font-semibold ' +
+                (vFull.status === 'Disponível' ? 'bg-green-100 text-green-800' :
+                 vFull.status === 'Vendido' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800');
+
+            // Destaque
+            const bd = document.getElementById('det_badgeDestaque');
+            vFull.destaque ? bd.classList.remove('hidden') : bd.classList.add('hidden');
+
+            // Galeria de imagens
+            const imgs = [];
+            if (vFull.imagem_principal) imgs.push(vFull.imagem_principal);
+            if (Array.isArray(vFull.imagens)) {
+                vFull.imagens.forEach(img => {
+                    const url = img.url || img;
+                    if (url && !imgs.includes(url)) imgs.push(url);
+                });
+            }
+            const placeholder = 'https://placehold.co/800x450/e2e8f0/94a3b8?text=Sem+Foto';
+            document.getElementById('det_fotoPrincipal').src = imgs.length ? imgs[0] : placeholder;
+            document.getElementById('det_fotoPrincipal').onerror = function(){ this.src = placeholder; };
+
+            const minEl = document.getElementById('det_miniaturas');
+            if (imgs.length > 1) {
+                minEl.innerHTML = imgs.map((url, i) => `
+                    <img src="${url}" onclick="document.getElementById('det_fotoPrincipal').src='${url}'"
+                         class="w-16 h-16 object-cover rounded-lg cursor-pointer border-2 ${i===0?'border-purple-500':'border-transparent'} hover:border-purple-400 transition"
+                         onerror="this.style.display='none'">
+                `).join('');
+            } else { minEl.innerHTML = ''; }
+
+            // Galeria completa
+            if (imgs.length > 1) {
+                document.getElementById('det_galeria').innerHTML = imgs.map(url => `
+                    <img src="${url}" class="w-full aspect-square object-cover rounded-lg"
+                         onerror="this.style.display='none'">
+                `).join('');
+                document.getElementById('det_secaoFotos').classList.remove('hidden');
+            } else {
+                document.getElementById('det_secaoFotos').classList.add('hidden');
+            }
+
+            // Opcionais
+            if (vFull.opcionais && vFull.opcionais.trim()) {
+                const itens = vFull.opcionais.split(',').map(s => s.trim()).filter(Boolean);
+                if (itens.length) {
+                    document.getElementById('det_opcionais').innerHTML = itens.map(o =>
+                        `<span class="bg-purple-50 border border-purple-200 text-purple-700 px-3 py-1 rounded-full text-sm">${o}</span>`
+                    ).join('');
+                    document.getElementById('det_secaoOpcionais').classList.remove('hidden');
+                }
+            } else { document.getElementById('det_secaoOpcionais').classList.add('hidden'); }
+
+            // Descrição
+            if (vFull.descricao && vFull.descricao.trim()) {
+                document.getElementById('det_descricao').textContent = vFull.descricao;
+                document.getElementById('det_secaoDescricao').classList.remove('hidden');
+            } else { document.getElementById('det_secaoDescricao').classList.add('hidden'); }
+
+            document.getElementById('det_loading').classList.add('hidden');
+            document.getElementById('det_conteudo').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function fecharDetalhes() {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-veiculos').classList.add('active');
+        }
+
+        function setDestaque(val) {
+            // Aceita true/false (banco) ou 'SIM'/'NAO' (interno)
+            if (val === true || val === 'true') val = 'SIM';
+            if (val === false || val === 'false' || !val) val = 'NAO';
+            const btn = document.getElementById('btnDestaque');
+            const thumb = document.getElementById('thumbDestaque');
+            const label = document.getElementById('labelDestaque');
+            const input = document.getElementById('destaque');
+            const ativo = (val === 'SIM');
+            input.value = ativo ? 'SIM' : 'NAO';
+            btn.setAttribute('aria-pressed', ativo);
+            btn.classList.toggle('bg-purple-600', ativo);
+            btn.classList.toggle('bg-gray-300', !ativo);
+            thumb.classList.toggle('translate-x-8', ativo);
+            thumb.classList.toggle('translate-x-1', !ativo);
+            label.textContent = ativo ? '⭐ Sim' : 'Não';
+        }
+
+        function toggleDestaque() {
+            const atual = document.getElementById('destaque').value;
+            setDestaque(atual === 'SIM' ? 'NAO' : 'SIM');
+        }
+
+        // ── Progresso de Upload ──
+        function mostrarProgresso(total) {
+            document.getElementById('progressoTexto').textContent = '0 de ' + total;
+            document.getElementById('progressoBarra').style.width = '0%';
+            document.getElementById('progressoPct').textContent = '0%';
+            document.getElementById('modalProgresso').classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function atualizarProgresso(atual, total) {
+            const pct = Math.round((atual / total) * 100);
+            document.getElementById('progressoBarra').style.width = pct + '%';
+            document.getElementById('progressoPct').textContent = pct + '%';
+            document.getElementById('progressoTexto').textContent = atual + ' de ' + total;
+        }
+        function fecharProgresso() {
+            document.getElementById('modalProgresso').classList.add('hidden');
+        }
+
+        // ── Modal Confirmação ──
+        let _confirmResolve = null;
+        function confirmar(titulo, mensagem, corBtn = 'bg-red-500 hover:bg-red-600') {
+            return new Promise(resolve => {
+                _confirmResolve = resolve;
+                document.getElementById('confirmTitulo').textContent = titulo;
+                document.getElementById('confirmMensagem').textContent = mensagem;
+                document.getElementById('confirmBtnOk').className = 'px-6 py-2.5 ' + corBtn + ' text-white rounded-xl font-medium transition';
+                document.getElementById('modalConfirm').classList.remove('hidden');
+                lucide.createIcons();
+            });
+        }
+        function fecharConfirm(resultado) {
+            document.getElementById('modalConfirm').classList.add('hidden');
+            if (_confirmResolve) { _confirmResolve(resultado); _confirmResolve = null; }
+        }
+
+        // Converte data URL base64 em Blob sem usar fetch() — funciona em file://
+        function dataURLparaBlob(dataURL) {
+            const [header, data] = dataURL.split(',');
+            const mime = header.match(/:(.*?);/)[1];
+            const bytes = atob(data);
+            const arr = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+            return new Blob([arr], { type: mime });
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            console.log('📂 Arquivos selecionados:', files.length);
+            Array.from(files).forEach((file, index) => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    console.log('✅ Imagem adicionada:', file.name, 'Total:', imagensSelecionadas.length + 1);
+                    imagensSelecionadas.push({
+                        nome: file.name,
+                        base64: e.target.result,
+                        isPrincipal: imagensSelecionadas.length === 0
+                    });
+                    renderizarPreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderizarPreviews() {
+            const container = document.getElementById('previewContainer');
+            container.innerHTML = imagensSelecionadas.map((img, idx) => `
+                <div class="relative group">
+                    <img src="${img.base64}" class="preview-img shadow-md">
+                    <button type="button" onclick="removerImagem(${idx})" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition">×</button>
+                    ${img.isPrincipal ? '<span class="absolute bottom-2 left-2 bg-purple-600 text-white text-xs px-3 py-1 rounded-full shadow-md font-semibold">Principal</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function removerImagem(idx) {
+            imagensSelecionadas.splice(idx, 1);
+            if (imagensSelecionadas.length > 0 && !imagensSelecionadas.some(i => i.isPrincipal)) {
+                imagensSelecionadas[0].isPrincipal = true;
+            }
+            renderizarPreviews();
+        }
+
+        async function carregarLeads() {
+            try {
+                const res = await fetch(`${API_URL}/leads`);
+                const result = await res.json();
+                if (result.success) {
+                    todosLeads = result.data;
+                    renderizarLeads();
+                }
+            } catch (e) { mostrarToast('Erro ao carregar leads', 'error'); }
+        }
+
+        function renderizarLeads() {
+            const lista = document.getElementById('listaLeads');
+            if (todosLeads.length === 0) {
+                lista.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum lead recebido</p>';
+                return;
+            }
+            lista.innerHTML = todosLeads.map(l => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800">${l.veiculo_interesse}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${l.telefone || 'Sem telefone'}</p>
+                            <p class="text-xs text-gray-400 mt-1">${new Date(l.data_hora).toLocaleString('pt-BR')}</p>
+                        </div>
+                        <select onchange="atualizarStatusLead(${l.id}, this.value)" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <option value="Novo" ${l.status==='Novo'?'selected':''}>Novo</option>
+                            <option value="Contatado" ${l.status==='Contatado'?'selected':''}>Contatado</option>
+                            <option value="Negociando" ${l.status==='Negociando'?'selected':''}>Negociando</option>
+                            <option value="Convertido" ${l.status==='Convertido'?'selected':''}>Convertido</option>
+                            <option value="Perdido" ${l.status==='Perdido'?'selected':''}>Perdido</option>
+                        </select>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function atualizarStatusLead(id, status) {
+            try {
+                const res = await fetch(`${API_URL}/leads/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ status })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    mostrarToast('Status do lead atualizado!', 'success');
+                } else {
+                    mostrarToast('Erro ao atualizar lead: ' + result.error, 'error');
+                }
+            } catch (e) { mostrarToast('Erro ao atualizar lead', 'error'); }
+        }
+
+        async function carregarClientes() {
+            try {
+                const res = await fetch(`${API_URL}/clientes`);
+                const result = await res.json();
+                if (result.success) {
+                    todosClientes = result.data;
+                    renderizarClientes();
+                }
+            } catch (e) { mostrarToast('Erro ao carregar clientes', 'error'); }
+        }
+
+        function renderizarClientes() {
+            const lista = document.getElementById('listaClientes');
+            if (!lista) return;
+            if (todosClientes.length === 0) {
+                lista.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum cliente cadastrado</p>';
+                return;
+            }
+            lista.innerHTML = todosClientes.map(c => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-lg text-gray-800">${c.nome}</h4>
+                            <div class="grid grid-cols-2 gap-x-6 mt-2">
+                                ${c.cpf ? `<p class="text-sm text-gray-600 flex items-center gap-1"><i data-lucide="credit-card" class="w-4 h-4"></i>${c.cpf}</p>` : ''}
+                                ${c.telefone ? `<p class="text-sm text-gray-600 flex items-center gap-1"><i data-lucide="phone" class="w-4 h-4"></i>${c.telefone}</p>` : ''}
+                                ${c.email ? `<p class="text-sm text-gray-600 flex items-center gap-1"><i data-lucide="mail" class="w-4 h-4"></i>${c.email}</p>` : ''}
+                                ${c.cidade ? `<p class="text-sm text-gray-600 flex items-center gap-1"><i data-lucide="map-pin" class="w-4 h-4"></i>${c.cidade}${c.estado ? ' - ' + c.estado : ''}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                            <button onclick="editarCliente(${c.id})" class="p-2 hover:bg-gray-100 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-5 h-5 text-gray-600"></i></button>
+                            <button onclick="excluirCliente(${c.id})" class="p-2 hover:bg-red-100 text-red-600 rounded-lg transition" title="Excluir"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function abrirModalCliente() {
+            document.getElementById('modalClienteTitulo').textContent = 'Adicionar Cliente';
+            document.getElementById('formCliente').reset();
+            document.getElementById('clienteId').value = '';
+            document.getElementById('modalCliente').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function fecharModalCliente() {
+            document.getElementById('modalCliente').classList.add('hidden');
+        }
+
+        function editarCliente(id) {
+            const cliente = todosClientes.find(c => c.id === id);
+            if (!cliente) return;
+            document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
+            document.getElementById('clienteId').value = cliente.id;
+            document.getElementById('cliente_nome').value = cliente.nome || '';
+            document.getElementById('cliente_cpf').value = cliente.cpf || '';
+            document.getElementById('cliente_telefone').value = cliente.telefone || '';
+            document.getElementById('cliente_email').value = cliente.email || '';
+            document.getElementById('cliente_cidade').value = cliente.cidade || '';
+            document.getElementById('cliente_estado').value = cliente.estado || '';
+            document.getElementById('cliente_observacoes').value = cliente.observacoes || '';
+            document.getElementById('modalCliente').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        async function salvarCliente(e) {
+            e.preventDefault();
+            const clienteId = document.getElementById('clienteId').value;
+            const dados = {
+                nome: document.getElementById('cliente_nome').value,
+                cpf: document.getElementById('cliente_cpf').value,
+                telefone: document.getElementById('cliente_telefone').value,
+                email: document.getElementById('cliente_email').value,
+                cidade: document.getElementById('cliente_cidade').value,
+                estado: document.getElementById('cliente_estado').value,
+                observacoes: document.getElementById('cliente_observacoes').value
+            };
+            try {
+                const url = clienteId ? `${API_URL}/clientes/${clienteId}` : `${API_URL}/clientes`;
+                const method = clienteId ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(dados)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    mostrarToast(clienteId ? 'Cliente atualizado!' : 'Cliente adicionado!', 'success');
+                    fecharModalCliente();
+                    await carregarClientes();
+                } else {
+                    mostrarToast('Erro ao salvar cliente: ' + result.error, 'error');
+                }
+            } catch (e) { mostrarToast('Erro ao salvar cliente', 'error'); }
+        }
+
+        async function excluirCliente(id) {
+            const okC = await confirmar('Excluir Cliente', 'Deseja realmente excluir este cliente?');
+            if (!okC) return;
+            try {
+                const res = await fetch(`${API_URL}/clientes/${id}`, {method: 'DELETE'});
+                const result = await res.json();
+                if (result.success) {
+                    mostrarToast('Cliente excluído!', 'success');
+                    await carregarClientes();
+                }
+            } catch (e) { mostrarToast('Erro ao excluir cliente', 'error'); }
+        }
+
+        async function carregarDespesas() {
+            try {
+                const res = await fetch(`${API_URL}/despesas`);
+                const result = await res.json();
+                if (result.success) {
+                    todasDespesas = result.data;
+                    renderizarDespesas();
+                }
+            } catch (e) { mostrarToast('Erro ao carregar despesas', 'error'); }
+        }
+
+        function renderizarDespesas() {
+            const lista = document.getElementById('listaDespesas');
+            if (todasDespesas.length === 0) {
+                lista.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhuma despesa cadastrada</p>';
+                return;
+            }
+            lista.innerHTML = todasDespesas.map(d => `
+                <div class="border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-md transition">
+                    <div>
+                        <h4 class="font-bold text-gray-800">${d.descricao}</h4>
+                        <p class="text-sm text-gray-600">${d.categoria}</p>
+                        <p class="text-purple-600 font-bold text-lg mt-1">${formatarMoeda(d.valor)}</p>
+                    </div>
+                    <button onclick="excluirDespesa(${d.id})" class="p-3 hover:bg-red-100 text-red-600 rounded-lg transition"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function abrirModalDespesa() {
+            document.getElementById('formDespesa').reset();
+            document.getElementById('modalDespesa').classList.remove('hidden');
+        }
+
+        function fecharModalDespesa() {
+            document.getElementById('modalDespesa').classList.add('hidden');
+        }
+
+        async function salvarDespesa(e) {
+            e.preventDefault();
+            const dados = {
+                descricao: document.getElementById('despesa_descricao').value,
+                categoria: document.getElementById('despesa_categoria').value,
+                valor: document.getElementById('despesa_valor').value
+            };
+            try {
+                const res = await fetch(`${API_URL}/despesas`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados)});
+                const result = await res.json();
+                if (result.success) {
+                    mostrarToast('Despesa adicionada!', 'success');
+                    fecharModalDespesa();
+                    await carregarDespesas();
+                    await carregarDashboard();
+                }
+            } catch (e) { mostrarToast('Erro ao adicionar despesa', 'error'); }
+        }
+
+        async function excluirDespesa(id) {
+            const okD = await confirmar('Excluir Despesa', 'Deseja realmente excluir esta despesa?');
+            if (!okD) return;
+            try {
+                const res = await fetch(`${API_URL}/despesas/${id}`, {method: 'DELETE'});
+                const result = await res.json();
+                if (result.success) {
+                    mostrarToast('Despesa excluída!', 'success');
+                    await carregarDespesas();
+                    await carregarDashboard();
+                }
+            } catch (e) { mostrarToast('Erro ao excluir despesa', 'error'); }
+        }
+
+        function mostrarAba(aba) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${aba}`).classList.add('active');
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            document.querySelector(`[data-tab="${aba}"]`).classList.add('active');
+            const titulos = {dashboard: 'Dashboard', veiculos: 'Veículos', leads: 'Leads', despesas: 'Despesas', clientes: 'Clientes'};
+            document.getElementById('tituloAba').textContent = titulos[aba];
+            lucide.createIcons();
+        }
+
+        async function sair() {
+            const okSair = await confirmar('Sair do Sistema', 'Deseja realmente sair?', 'bg-gray-700 hover:bg-gray-800');
+            if (okSair) {
+                localStorage.removeItem('admin_autenticado');
+                localStorage.removeItem('admin_timestamp');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function mostrarToast(msg, tipo) {
+            const cores = {success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500'};
+            const toast = document.createElement('div');
+            toast.className = `toast ${cores[tipo] || 'bg-gray-500'} text-white px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-3`;
+            toast.innerHTML = `<i data-lucide="${tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'alert-circle' : 'info'}" class="w-5 h-5"></i><span>${msg}</span>`;
+            document.getElementById('toastContainer').appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(valor || 0);
+        }
+
+        function formatarKm(km) {
+            return new Intl.NumberFormat('pt-BR').format(km || 0);
+        }
+
+        function popularOpcionais(opcionaisStr = '') {
+            const grid = document.getElementById('opcionaisGrid');
+            if (!grid) return;
+            const marcados = opcionaisStr ? opcionaisStr.split(',').map(s => s.trim()) : [];
+            grid.innerHTML = OPCIONAIS_DISPONIVEIS.map(op => `
+                <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <input type="checkbox"
+                           value="${op}"
+                           onchange="atualizarOpcionais()"
+                           ${marcados.includes(op) ? 'checked' : ''}
+                           class="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-600">
+                    <span class="text-sm text-gray-700">${op}</span>
+                </label>
+            `).join('');
+            // Sincronizar campo hidden
+            atualizarOpcionais();
+        }
+
+        function atualizarOpcionais() {
+            const checks = document.querySelectorAll('#opcionaisGrid input[type="checkbox"]:checked');
+            const selecionados = Array.from(checks).map(c => c.value);
+            document.getElementById('opcionais').value = selecionados.join(', ');
+        }
+
+        function marcarOpcionais(opcionaisStr) {
+            if (!opcionaisStr) return;
+            const lista = opcionaisStr.split(',').map(s => s.trim());
+            document.querySelectorAll('#opcionaisGrid input[type="checkbox"]').forEach(cb => {
+                cb.checked = lista.includes(cb.value);
+            });
+        }
+
+        function popularMarcas() {
+            const datalist = document.getElementById('listaMarcas');
+            datalist.innerHTML = Object.keys(MARCAS_MODELOS).sort().map(m => 
+                `<option value="${m}">`
+            ).join('');
+        }
+
+        function atualizarModelos() {
+            const marca = document.getElementById('marca').value;
+            const datalist = document.getElementById('listaModelos');
+            const modelos = MARCAS_MODELOS[marca] || [];
+            datalist.innerHTML = modelos.map(m => `<option value="${m}">`).join('');
+        }
+
+        function toggleSidebar() {
+            console.log('Toggle sidebar chamado');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (!sidebar) {
+                console.error('Sidebar não encontrado!');
+                return;
+            }
+            if (!overlay) {
+                console.error('Overlay não encontrado!');
+                return;
+            }
+            
+            const isOpen = sidebar.classList.contains('open');
+            console.log('Estado atual:', isOpen ? 'aberto' : 'fechado');
+            
+            if (isOpen) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            }
+            
+            console.log('Novo estado:', sidebar.classList.contains('open') ? 'aberto' : 'fechado');
+        }
+    </script>
+</body>
+</html>

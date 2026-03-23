@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Área Administrativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/lucide@latest/dist/lucide.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold:#C9A84C; --gold-light:#e8c97a; --dark:#0D0F14; --dark-2:#161920; --dark-3:#1E2230; --text:#F0F2F8; --text-muted:#8A91A8; }
+        * { font-family:'Outfit',sans-serif; box-sizing:border-box; margin:0; padding:0; }
+        h1,h2,h3,label,button { font-family:'Syne',sans-serif; }
+        ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:var(--dark-2)} ::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+        .login-container { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--dark); position:relative; overflow:hidden; }
+        .login-container::before { content:''; position:absolute; top:-30%; right:-20%; width:600px; height:600px; background:radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%); pointer-events:none; }
+        .login-card { background:var(--dark-2); border:1px solid rgba(201,168,76,0.15); border-radius:24px; padding:40px; width:100%; max-width:420px; box-shadow:0 32px 80px rgba(0,0,0,0.6); }
+        .input-field { width:100%; background:var(--dark-3); border:1.5px solid rgba(255,255,255,0.08); color:var(--text); border-radius:12px; padding:14px 16px; font-size:0.9rem; transition:border-color 0.2s; font-family:'Outfit',sans-serif; }
+        .input-field:focus { outline:none; border-color:var(--gold); }
+        .input-field.border-red-500 { border-color:#ef4444; }
+        .input-field::placeholder { color:var(--text-muted); }
+        .btn-gold { background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:#0D0F14; font-weight:700; border-radius:12px; padding:14px; width:100%; font-family:'Syne',sans-serif; font-size:0.9rem; letter-spacing:0.04em; transition:all 0.3s; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 20px rgba(201,168,76,0.25); }
+        .btn-gold:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 28px rgba(201,168,76,0.4); }
+        .btn-gold:disabled { opacity:0.6; cursor:not-allowed; }
+        .btn-gold.bg-green-600 { background:linear-gradient(135deg,#16a34a,#22c55e) !important; box-shadow:0 4px 20px rgba(34,197,94,0.3); }
+        .label { display:block; font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+        .shake { animation:shake 0.5s; }
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes shake { 0%,100%{transform:translateX(0)} 10%,30%,50%,70%,90%{transform:translateX(-10px)} 20%,40%,60%,80%{transform:translateX(10px)} }
+        .error-msg { color:#f87171; font-size:0.82rem; margin-top:8px; display:flex; align-items:center; gap:6px; }
+        .back-link { color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:6px; transition:color 0.2s; margin-top:20px; text-decoration:none; }
+        .back-link:hover { color:var(--gold); }
+    </style>
+</head>
+<body>
+    
+    <div class="login-container">
+        <div class="w-full mx-4" style="max-width:420px">
+            <div class="text-center mb-8">
+                <img src="logo_empresa.png" alt="Logo" style="height:52px;width:auto;margin:0 auto 16px;object-fit:contain"
+                     onerror="this.style.display='none'">
+                <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.25);border-radius:16px;margin-bottom:16px">
+                    <i data-lucide="shield-check" style="width:26px;height:26px;color:var(--gold)"></i>
+                </div>
+                <h1 style="font-family:Syne,sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:4px">Área Administrativa</h1>
+                <p style="color:var(--text-muted);font-size:0.88rem">Sistema de Gestão — HM Motors</p>
+            </div>
+
+            <div id="loginCard" class="login-card">
+                <form id="formLogin" onsubmit="fazerLogin(event)">
+                    <div style="margin-bottom:20px">
+                        <label class="label">Senha Administrativa</label>
+                        <div style="position:relative">
+                            <input type="password" id="inputSenha" class="input-field" placeholder="Digite sua senha" required style="padding-right:48px">
+                            <button type="button" onclick="toggleSenha()"
+                                style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted)">
+                                <i id="iconOlho" data-lucide="eye" style="width:18px;height:18px"></i>
+                            </button>
+                        </div>
+                        <p id="mensagemErro" class="error-msg hidden">
+                            <i data-lucide="alert-circle" style="width:15px;height:15px"></i>
+                            Senha incorreta. Tente novamente.
+                        </p>
+                    </div>
+                    <button type="submit" id="btnEntrar" class="btn-gold">
+                        <i data-lucide="log-in" style="width:18px;height:18px"></i>
+                        Entrar
+                    </button>
+                </form>
+                <a href="index.html" class="back-link">
+                    <i data-lucide="arrow-left" style="width:15px;height:15px"></i>
+                    Voltar para o site
+                </a>
+            </div>
+            <p style="text-align:center;color:var(--text-muted);font-size:0.78rem;margin-top:20px">© 2025 HM Motors · Sistema Profissional</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO DA API
+        // ============================================
+        const API_URL = 'https://loja-carros-backend.onrender.com/api';
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            verificarSessao();
+            document.getElementById('inputSenha').focus();
+        });
+
+        // ============================================
+        // VERIFICAR SESSÃO EXISTENTE
+        // ============================================
+        function verificarSessao() {
+            const sessao = localStorage.getItem('admin_autenticado');
+            const timestamp = localStorage.getItem('admin_timestamp');
+            
+            if (sessao === 'true' && timestamp) {
+                const tempoDecorrido = Date.now() - parseInt(timestamp);
+                const TEMPO_SESSAO = 8 * 60 * 60 * 1000; // 8 horas
+                
+                if (tempoDecorrido < TEMPO_SESSAO) {
+                    // Sessão válida, redirecionar
+                    window.location.href = 'admin.html';
+                } else {
+                    // Sessão expirada
+                    limparSessao();
+                }
+            }
+        }
+
+        // ============================================
+        // FAZER LOGIN
+        // ============================================
+        async function fazerLogin(event) {
+            event.preventDefault();
+            
+            const senha = document.getElementById('inputSenha').value;
+            const btnEntrar = document.getElementById('btnEntrar');
+            const mensagemErro = document.getElementById('mensagemErro');
+            const loginCard = document.getElementById('loginCard');
+            
+            // Desabilitar botão
+            btnEntrar.disabled = true;
+            btnEntrar.innerHTML = '<i data-lucide="loader-2" style="width:18px;height:18px;animation:spin 1s linear infinite"></i>Verificando...';
+            lucide.createIcons();
+            
+            // Esconder mensagem de erro anterior
+            mensagemErro.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${API_URL}/login?senha=${encodeURIComponent(senha)}`);
+                const result = await response.json();
+                
+                if (result.success && result.authenticated) {
+                    // Login bem-sucedido
+                    localStorage.setItem('admin_autenticado', 'true');
+                    localStorage.setItem('admin_timestamp', Date.now().toString());
+                    
+                    // Feedback visual de sucesso
+                    btnEntrar.innerHTML = '<i data-lucide="check-circle" style="width:18px;height:18px"></i>Acesso liberado!';
+                    btnEntrar.classList.add('bg-green-600');
+                    lucide.createIcons();
+                    
+                    // Redirecionar após 1 segundo
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1000);
+                } else {
+                    // Senha incorreta
+                    mostrarErro();
+                }
+            } catch (error) {
+                console.error('Erro ao fazer login:', error);
+                mostrarErroConexao();
+            }
+        }
+
+        // ============================================
+        // MOSTRAR ERRO
+        // ============================================
+        function mostrarErro() {
+            const btnEntrar = document.getElementById('btnEntrar');
+            const mensagemErro = document.getElementById('mensagemErro');
+            const loginCard = document.getElementById('loginCard');
+            const inputSenha = document.getElementById('inputSenha');
+            
+            // Mostrar mensagem de erro
+            mensagemErro.classList.remove('hidden');
+            
+            // Shake animation
+            loginCard.classList.add('shake');
+            setTimeout(() => loginCard.classList.remove('shake'), 500);
+            
+            // Resetar botão
+            btnEntrar.disabled = false;
+            btnEntrar.innerHTML = '<i data-lucide="log-in" style="width:18px;height:18px"></i>Entrar';
+            lucide.createIcons();
+            
+            // Limpar e focar no input
+            inputSenha.value = '';
+            inputSenha.focus();
+            inputSenha.classList.add('border-red-500');
+            setTimeout(() => inputSenha.classList.remove('border-red-500'), 3000);
+        }
+
+        function mostrarErroConexao() {
+            const btnEntrar = document.getElementById('btnEntrar');
+            const mensagemErro = document.getElementById('mensagemErro');
+            
+            mensagemErro.innerHTML = '<i data-lucide="wifi-off" class="w-4 h-4 mr-1"></i>Erro de conexão. Verifique sua internet.';
+            mensagemErro.classList.remove('hidden');
+            lucide.createIcons();
+            
+            btnEntrar.disabled = false;
+            btnEntrar.innerHTML = '<i data-lucide="log-in" style="width:18px;height:18px"></i>Tentar Novamente';
+            lucide.createIcons();
+        }
+
+        // ============================================
+        // TOGGLE SENHA
+        // ============================================
+        function toggleSenha() {
+            const input = document.getElementById('inputSenha');
+            const icon = document.getElementById('iconOlho');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            
+            lucide.createIcons();
+        }
+
+        // ============================================
+        // LIMPAR SESSÃO
+        // ============================================
+        function limparSessao() {
+            localStorage.removeItem('admin_autenticado');
+            localStorage.removeItem('admin_timestamp');
+        }
+
+        // ============================================
+        // ATALHOS DE TECLADO
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            // ESC para voltar
+            if (e.key === 'Escape') {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
