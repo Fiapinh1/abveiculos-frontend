@@ -3,197 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do Veículo - Alysson Bruno</title>
+    <title>Ficha do Veículo - AB Veículos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .tab-btn.active { background: #667eea; color: white; }
-        .categoria-badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
-        .categoria-mecanica { background: #fef3c7; color: #92400e; }
-        .categoria-documentacao { background: #dbeafe; color: #1e40af; }
-        .categoria-estetica { background: #fce7f3; color: #9f1239; }
-        .categoria-transporte { background: #d1fae5; color: #065f46; }
-        .categoria-outros { background: #e5e7eb; color: #374151; }
-        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 9999; animation: slideIn 0.3s ease; min-width: 300px; }
-        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+        :root{--gold:#C9A84C;--gold-light:#e8c97a;--dark:#0D0F14;--dark-2:#161920;--dark-3:#1E2230;--dark-4:#252A3A;--text:#F0F2F8;--text-muted:#8A91A8;}
+        *{font-family:'Outfit',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+        h1,h2,h3{font-family:'Syne',sans-serif;}
+        body{background:var(--dark);color:var(--text);min-height:100vh;}
+        ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--dark-2)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+        @keyframes slideIn{from{transform:translateX(400px)}to{transform:translateX(0)}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+        /* Header */
+        .header-glass{background:rgba(13,15,20,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(201,168,76,0.15);}
+
+        /* Cards */
+        .card{background:var(--dark-2);border:1px solid rgba(255,255,255,0.07);border-radius:16px;}
+        .stat-fin{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;transition:all 0.25s;}
+        .stat-fin:hover{border-color:rgba(201,168,76,0.2);transform:translateY(-2px);}
+
+        /* Tabs */
+        .tab-bar{background:var(--dark-2);border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;}
+        .tab-header{border-bottom:1px solid rgba(255,255,255,0.07);padding:4px;display:flex;gap:4px;overflow-x:auto;}
+        .tab-btn{padding:10px 18px;border-radius:10px;font-weight:600;font-family:'Syne',sans-serif;transition:all 0.2s;cursor:pointer;font-size:0.82rem;border:none;background:transparent;color:var(--text-muted);white-space:nowrap;}
+        .tab-btn.active{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#0D0F14;}
+        .tab-btn:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.05);}
+        .tab-content{display:none;padding:24px;animation:fadeUp 0.3s ease;}
+        .tab-content.active{display:block;}
+
+        /* Badges */
+        .categoria-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;}
+        .categoria-mecanica{background:rgba(234,179,8,0.15);color:#facc15;}
+        .categoria-documentacao{background:rgba(59,130,246,0.15);color:#60a5fa;}
+        .categoria-estetica{background:rgba(236,72,153,0.15);color:#f472b6;}
+        .categoria-transporte{background:rgba(34,197,94,0.15);color:#4ade80;}
+        .categoria-outros{background:rgba(255,255,255,0.08);color:var(--text-muted);}
+
+        /* Despesas/Manutenções rows */
+        .item-row{background:var(--dark-3);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:14px 16px;transition:border-color 0.2s;}
+        .item-row:hover{border-color:rgba(201,168,76,0.15);}
+
+        /* Inputs e Selects */
+        input,select,textarea{background:var(--dark-3) !important;border:1.5px solid rgba(255,255,255,0.08) !important;color:var(--text) !important;border-radius:10px;padding:10px 14px;font-size:0.9rem;font-family:'Outfit',sans-serif;width:100%;}
+        input::placeholder,textarea::placeholder{color:var(--text-muted) !important;}
+        input:focus,select:focus,textarea:focus{outline:none !important;border-color:var(--gold) !important;box-shadow:0 0 0 3px rgba(201,168,76,0.1) !important;}
+        select option{background:var(--dark-3);}
+        label{color:var(--text-muted);font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:6px;}
+
+        /* Botões */
+        .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#0D0F14;font-weight:700;font-family:'Syne',sans-serif;border-radius:10px;transition:all 0.25s;border:none;cursor:pointer;padding:10px 20px;}
+        .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,0.35);}
+        .btn-green{background:linear-gradient(135deg,#16a34a,#22c55e);color:white;font-weight:700;font-family:'Syne',sans-serif;border-radius:10px;transition:all 0.25s;border:none;cursor:pointer;padding:10px 20px;}
+        .btn-green:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,0.35);}
+        .btn-ghost{background:transparent;border:1.5px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:10px;transition:all 0.2s;cursor:pointer;padding:10px 20px;}
+        .btn-ghost:hover{border-color:rgba(201,168,76,0.3);color:var(--text);}
+
+        /* Modal */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:50;align-items:center;justify-content:center;padding:16px;}
+        .modal-overlay:not(.hidden){display:flex !important;}
+        .modal-card{background:var(--dark-2);border:1px solid rgba(255,255,255,0.08);border-radius:20px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.6);}
+
+        /* Toast */
+        .toast{position:fixed;bottom:20px;right:20px;z-index:9999;animation:slideIn 0.3s ease;min-width:300px;border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+
+        /* Busca cliente */
+        .cliente-item{padding:12px 16px;border-radius:10px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;border:1px solid transparent;}
+        .cliente-item:hover,.cliente-item.selecionado{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.3);}
+        .cliente-item.selecionado{background:rgba(201,168,76,0.15);}
+        #listaClientesBusca{max-height:280px;overflow-y:auto;border:1px solid rgba(255,255,255,0.08);border-radius:12px;background:var(--dark-3);}
+
+        /* Timeline */
+        .timeline-item{display:flex;gap:16px;padding-bottom:20px;position:relative;}
+        .timeline-item::before{content:'';position:absolute;left:19px;top:40px;width:2px;height:calc(100% - 20px);background:rgba(255,255,255,0.07);}
+        .timeline-item:last-child::before{display:none;}
+        .timeline-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     </style>
 </head>
-<body class="bg-gray-50">
-    
+<body>
+
     <!-- Header -->
-    <header class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+    <header class="header-glass sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button onclick="window.close()" class="p-2 hover:bg-white/20 rounded-lg transition">
-                    <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                <button onclick="voltarAdmin()"
+                    style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);cursor:pointer;transition:all 0.2s;color:var(--text)"
+                    onmouseover="this.style.background='rgba(201,168,76,0.15)';this.style.borderColor='rgba(201,168,76,0.3)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.08)'">
+                    <i data-lucide="arrow-left" style="width:18px;height:18px"></i>
                 </button>
                 <div>
-                    <h1 class="text-xl font-bold">Ficha Completa do Veículo</h1>
-                    <p class="text-sm opacity-80" id="subtitulo">Carregando...</p>
+                    <h1 style="font-size:1rem;font-weight:700;color:var(--text)">Ficha do Veículo</h1>
+                    <p style="font-size:0.78rem;color:var(--text-muted)" id="subtitulo">Carregando...</p>
                 </div>
             </div>
-            <button onclick="voltarAdmin()" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm">
+            <button onclick="voltarAdmin()" class="btn-ghost" style="font-size:0.82rem;padding:8px 16px;display:flex;align-items:center;gap:6px">
+                <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
                 Voltar ao Painel
             </button>
         </div>
     </header>
 
     <!-- Loading -->
-    <div id="loading" class="max-w-7xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-xl p-8 text-center">
-            <div class="animate-spin w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-gray-600">Carregando informações...</p>
-        </div>
+    <div id="loading" class="max-w-7xl mx-auto px-4 py-20 text-center">
+        <div style="width:44px;height:44px;border:3px solid rgba(201,168,76,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div>
+        <p style="color:var(--text-muted)">Carregando informações...</p>
     </div>
 
-    <!-- Conteúdo Principal -->
-    <div id="conteudo" class="hidden max-w-7xl mx-auto px-4 py-8">
-        
-        <!-- Cabeçalho do Veículo -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <!-- Conteúdo -->
+    <div id="conteudo" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
+
+        <!-- Header do Veículo -->
+        <div class="card p-6">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <h2 id="tituloVeiculo" class="text-3xl font-bold text-gray-800 mb-2"></h2>
-                    <div id="infoBasica" class="flex flex-wrap gap-4 text-gray-600"></div>
+                    <h2 id="tituloVeiculo" style="font-size:1.8rem;font-weight:800;color:var(--text);margin-bottom:8px"></h2>
+                    <div id="infoBasica" style="display:flex;flex-wrap:wrap;gap:8px;color:var(--text-muted);font-size:0.88rem"></div>
                 </div>
-                <div class="text-right">
-                    <p class="text-sm text-gray-500 mb-1">Investimento Total</p>
-                    <p id="investimentoTotal" class="text-3xl font-bold text-purple-600"></p>
-                    <div id="statusBadge" class="mt-2"></div>
+                <div style="text-align:right">
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em">Investimento Total</p>
+                    <p id="investimentoTotal" style="font-size:2rem;font-weight:800;color:var(--gold);font-family:'Syne',sans-serif"></p>
+                    <div id="statusBadge" style="margin-top:8px"></div>
                 </div>
             </div>
         </div>
 
         <!-- Tabs -->
-        <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
-            <div class="flex border-b overflow-x-auto">
-                <button onclick="mostrarTab('financeiro')" class="tab-btn px-6 py-3 font-medium transition" data-tab="financeiro">
-                    💰 Financeiro
-                </button>
-                <button onclick="mostrarTab('despesas')" class="tab-btn px-6 py-3 font-medium transition" data-tab="despesas">
-                    📊 Despesas
-                </button>
-                <button onclick="mostrarTab('manutencoes')" class="tab-btn px-6 py-3 font-medium transition" data-tab="manutencoes">
-                    🔧 Manutenções
-                </button>
-                <button onclick="mostrarTab('historico')" class="tab-btn px-6 py-3 font-medium transition" data-tab="historico">
-                    📅 Histórico
-                </button>
+        <div class="tab-bar">
+            <div class="tab-header">
+                <button onclick="mostrarTab('financeiro')" class="tab-btn active" data-tab="financeiro">💰 Financeiro</button>
+                <button onclick="mostrarTab('despesas')" class="tab-btn" data-tab="despesas">📊 Despesas</button>
+                <button onclick="mostrarTab('manutencoes')" class="tab-btn" data-tab="manutencoes">🔧 Manutenções</button>
+                <button onclick="mostrarTab('historico')" class="tab-btn" data-tab="historico">📅 Histórico</button>
             </div>
 
             <!-- Tab Financeiro -->
-            <div id="tab-financeiro" class="p-6 tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <p class="text-sm text-blue-600 mb-1">Valor de Compra</p>
-                        <p id="valorCompra" class="text-2xl font-bold text-blue-900"></p>
+            <div id="tab-financeiro" class="tab-content active">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="stat-fin">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(96,165,250,0.15);display:flex;align-items:center;justify-content:center">
+                                <i data-lucide="shopping-cart" style="width:16px;height:16px;color:#60a5fa"></i>
+                            </div>
+                            <span style="font-size:0.75rem;color:var(--text-muted)">Valor de Compra</span>
+                        </div>
+                        <p id="valorCompra" style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif"></p>
                     </div>
-                    <div class="bg-yellow-50 p-4 rounded-lg">
-                        <p class="text-sm text-yellow-600 mb-1">Custos Extras</p>
-                        <p id="custosExtras" class="text-2xl font-bold text-yellow-900"></p>
+                    <div class="stat-fin">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(250,204,21,0.15);display:flex;align-items:center;justify-content:center">
+                                <i data-lucide="receipt" style="width:16px;height:16px;color:#facc15"></i>
+                            </div>
+                            <span style="font-size:0.75rem;color:var(--text-muted)">Custos Extras</span>
+                        </div>
+                        <p id="custosExtras" style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif"></p>
                     </div>
-                    <div class="bg-green-50 p-4 rounded-lg">
-                        <p class="text-sm text-green-600 mb-1">Valor Anunciado</p>
-                        <p id="valorAnunciado" class="text-2xl font-bold text-green-900"></p>
+                    <div class="stat-fin">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(74,222,128,0.15);display:flex;align-items:center;justify-content:center">
+                                <i data-lucide="tag" style="width:16px;height:16px;color:#4ade80"></i>
+                            </div>
+                            <span style="font-size:0.75rem;color:var(--text-muted)">Valor Anunciado</span>
+                        </div>
+                        <p id="valorAnunciado" style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif"></p>
                     </div>
-                    <div class="bg-purple-50 p-4 rounded-lg">
-                        <p class="text-sm text-purple-600 mb-1">Lucro Projetado</p>
-                        <p id="lucroProjetado" class="text-2xl font-bold text-purple-900"></p>
+                    <div class="stat-fin">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center">
+                                <i data-lucide="trending-up" style="width:16px;height:16px;color:var(--gold)"></i>
+                            </div>
+                            <span style="font-size:0.75rem;color:var(--text-muted)">Lucro Projetado</span>
+                        </div>
+                        <p id="lucroProjetado" style="font-size:1.4rem;font-weight:700;font-family:'Syne',sans-serif"></p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
-                        <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
-                            <i data-lucide="pie-chart" class="w-5 h-5 text-purple-600"></i>
+                        <h3 style="font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                            <i data-lucide="pie-chart" style="width:18px;height:18px;color:var(--gold)"></i>
                             Composição do Investimento
                         </h3>
-                        <div style="height:300px;max-width:100%;"><canvas id="graficoInvestimento" style="height:100%!important;width:100%!important;max-width:100%!important;max-height:100%!important;display:block;"></canvas></div>
+                        <div style="height:260px"><canvas id="graficoInvestimento"></canvas></div>
                     </div>
                     <div id="secaoVenda"></div>
                 </div>
             </div>
 
             <!-- Tab Despesas -->
-            <div id="tab-despesas" class="p-6 tab-content hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-gray-700">Despesas Detalhadas</h3>
-                    <button onclick="adicionarDespesa()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm">
-                        + Adicionar Despesa
+            <div id="tab-despesas" class="tab-content">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3 style="font-weight:700;color:var(--text)">Despesas Detalhadas</h3>
+                    <button onclick="adicionarDespesa()" class="btn-gold" style="font-size:0.82rem;padding:8px 16px;display:flex;align-items:center;gap:6px">
+                        <i data-lucide="plus" style="width:15px;height:15px"></i> Adicionar
                     </button>
                 </div>
                 <div id="listaDespesas" class="space-y-3"></div>
             </div>
 
             <!-- Tab Manutenções -->
-            <div id="tab-manutencoes" class="p-6 tab-content hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-gray-700">Histórico de Manutenções</h3>
-                    <button onclick="adicionarManutencao()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm">
-                        + Adicionar Manutenção
+            <div id="tab-manutencoes" class="tab-content">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3 style="font-weight:700;color:var(--text)">Histórico de Manutenções</h3>
+                    <button onclick="adicionarManutencao()" class="btn-gold" style="font-size:0.82rem;padding:8px 16px;display:flex;align-items:center;gap:6px">
+                        <i data-lucide="plus" style="width:15px;height:15px"></i> Adicionar
                     </button>
                 </div>
                 <div id="listaManutencoes" class="space-y-3"></div>
             </div>
 
             <!-- Tab Histórico -->
-            <div id="tab-historico" class="p-6 tab-content hidden">
+            <div id="tab-historico" class="tab-content">
                 <div id="linhaDoTempo"></div>
             </div>
         </div>
-
     </div>
 
-    <!-- Modal Venda -->
-    <div id="modalVenda" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Registrar Venda</h3>
-            <form id="formVenda" onsubmit="salvarVenda(event)">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Cliente*</label>
-                        <input type="text" id="buscaCliente" placeholder="Buscar por nome, CPF ou telefone..." 
-                               class="w-full border rounded-lg px-4 py-2 mb-2" 
-                               onkeyup="filtrarClientes()">
-                        <select id="vendaCliente" required size="5" class="w-full border rounded-lg px-4 py-2">
-                            <option value="">Selecione o cliente</option>
-                        </select>
+    <!-- ═══ MODAL VENDA ═══ -->
+    <div id="modalVenda" class="hidden modal-overlay">
+        <div class="modal-card" style="max-width:520px">
+            <div style="padding:24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:38px;height:38px;border-radius:10px;background:rgba(74,222,128,0.12);display:flex;align-items:center;justify-content:center">
+                        <i data-lucide="handshake" style="width:18px;height:18px;color:#4ade80"></i>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Valor de Venda*</label>
-                        <input type="number" id="vendaValor" required step="0.01" class="w-full border rounded-lg px-4 py-2">
+                    <h3 style="font-size:1.1rem;font-weight:700;color:var(--text)">Registrar Venda</h3>
+                </div>
+                <button onclick="fecharModalVenda()" style="background:transparent;border:none;cursor:pointer;color:var(--text-muted);padding:6px;border-radius:8px" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
+                    <i data-lucide="x" style="width:18px;height:18px"></i>
+                </button>
+            </div>
+            <div style="padding:24px">
+                <form id="formVenda" onsubmit="salvarVenda(event)">
+                    <div style="margin-bottom:20px">
+                        <label>Cliente*</label>
+                        <!-- Busca -->
+                        <div style="position:relative;margin-bottom:8px">
+                            <input type="text" id="buscaCliente" placeholder="Buscar por nome, CPF ou telefone..." oninput="filtrarClientes()" style="padding-left:38px">
+                            <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-muted)"></i>
+                        </div>
+                        <div id="listaClientesBusca"></div>
+                        <input type="hidden" id="vendaClienteId">
+                        <div id="clienteSelecionadoInfo" style="display:none;margin-top:8px;padding:10px 14px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;font-size:0.85rem">
+                            <span style="color:var(--gold)">✓ </span><span id="clienteSelecionadoNome" style="color:var(--text)"></span>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Forma de Pagamento*</label>
-                        <select id="vendaFormaPgto" required class="w-full border rounded-lg px-4 py-2">
+                    <div style="margin-bottom:16px">
+                        <label>Valor de Venda*</label>
+                        <input type="number" id="vendaValor" required step="0.01" placeholder="R$ 0,00">
+                    </div>
+                    <div style="margin-bottom:24px">
+                        <label>Forma de Pagamento*</label>
+                        <select id="vendaFormaPgto" required>
                             <option value="">Selecione</option>
                             <option value="À vista">À vista</option>
                             <option value="Financiado">Financiado</option>
                             <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="PIX">PIX</option>
+                            <option value="Permuta">Permuta</option>
                         </select>
                     </div>
-                </div>
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" onclick="fecharModalVenda()" class="px-4 py-2 border rounded-lg">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Confirmar Venda</button>
-                </div>
-            </form>
+                    <div style="display:flex;gap:12px;justify-content:flex-end">
+                        <button type="button" onclick="fecharModalVenda()" class="btn-ghost">Cancelar</button>
+                        <button type="submit" class="btn-green" style="display:flex;align-items:center;gap:6px">
+                            <i data-lucide="check" style="width:16px;height:16px"></i> Confirmar Venda
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Despesa -->
-    <div id="modalDespesa" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 class="text-xl font-bold mb-4">Adicionar Despesa</h3>
-            <form id="formDespesa" onsubmit="salvarDespesa(event)">
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Categoria*</label>
-                        <select id="despesaCategoria" required class="w-full border rounded-lg px-3 py-2">
+    <!-- ═══ MODAL DESPESA ═══ -->
+    <div id="modalDespesa" class="hidden modal-overlay">
+        <div class="modal-card" style="max-width:440px">
+            <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center">
+                <h3 style="font-weight:700;color:var(--text)">Adicionar Despesa</h3>
+                <button onclick="fecharModalDespesa()" style="background:transparent;border:none;cursor:pointer;color:var(--text-muted)">
+                    <i data-lucide="x" style="width:18px;height:18px"></i>
+                </button>
+            </div>
+            <div style="padding:24px">
+                <form id="formDespesa" onsubmit="salvarDespesa(event)">
+                    <div style="margin-bottom:14px">
+                        <label>Categoria*</label>
+                        <select id="despesaCategoria" required>
                             <option value="Mecânica">Mecânica</option>
                             <option value="Documentação">Documentação</option>
                             <option value="Estética">Estética</option>
@@ -201,74 +299,74 @@
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Descrição*</label>
-                        <input type="text" id="despesaDescricao" required class="w-full border rounded-lg px-3 py-2">
+                    <div style="margin-bottom:14px">
+                        <label>Descrição*</label>
+                        <input type="text" id="despesaDescricao" required placeholder="Descreva a despesa">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Valor*</label>
-                        <input type="number" id="despesaValor" required step="0.01" class="w-full border rounded-lg px-3 py-2">
+                    <div style="margin-bottom:14px">
+                        <label>Valor*</label>
+                        <input type="number" id="despesaValor" required step="0.01" placeholder="0,00">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Data</label>
-                        <input type="date" id="despesaData" class="w-full border rounded-lg px-3 py-2">
+                    <div style="margin-bottom:24px">
+                        <label>Data</label>
+                        <input type="date" id="despesaData">
                     </div>
-                </div>
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button type="button" onclick="fecharModalDespesa()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm">Salvar</button>
-                </div>
-            </form>
+                    <div style="display:flex;gap:12px;justify-content:flex-end">
+                        <button type="button" onclick="fecharModalDespesa()" class="btn-ghost">Cancelar</button>
+                        <button type="submit" class="btn-gold">Salvar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Manutenção -->
-    <div id="modalManutencao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 class="text-xl font-bold mb-4">Adicionar Manutenção</h3>
-            <form id="formManutencao" onsubmit="salvarManutencao(event)">
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Descrição*</label>
-                        <input type="text" id="manutencaoDescricao" required class="w-full border rounded-lg px-3 py-2">
+    <!-- ═══ MODAL MANUTENÇÃO ═══ -->
+    <div id="modalManutencao" class="hidden modal-overlay">
+        <div class="modal-card" style="max-width:440px">
+            <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center">
+                <h3 style="font-weight:700;color:var(--text)">Adicionar Manutenção</h3>
+                <button onclick="fecharModalManutencao()" style="background:transparent;border:none;cursor:pointer;color:var(--text-muted)">
+                    <i data-lucide="x" style="width:18px;height:18px"></i>
+                </button>
+            </div>
+            <div style="padding:24px">
+                <form id="formManutencao" onsubmit="salvarManutencao(event)">
+                    <div style="margin-bottom:14px">
+                        <label>Descrição*</label>
+                        <input type="text" id="manutencaoDescricao" required placeholder="Ex: Troca de óleo">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Valor*</label>
-                        <input type="number" id="manutencaoValor" required step="0.01" class="w-full border rounded-lg px-3 py-2">
+                    <div style="margin-bottom:14px">
+                        <label>Valor*</label>
+                        <input type="number" id="manutencaoValor" required step="0.01" placeholder="0,00">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Data</label>
-                        <input type="date" id="manutencaoData" class="w-full border rounded-lg px-3 py-2">
+                    <div style="margin-bottom:14px">
+                        <label>Data</label>
+                        <input type="date" id="manutencaoData">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Observação</label>
-                        <textarea id="manutencaoObs" rows="2" class="w-full border rounded-lg px-3 py-2"></textarea>
+                    <div style="margin-bottom:24px">
+                        <label>Observação</label>
+                        <textarea id="manutencaoObs" rows="2" placeholder="Detalhes adicionais..."></textarea>
                     </div>
-                </div>
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button type="button" onclick="fecharModalManutencao()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm">Salvar</button>
-                </div>
-            </form>
+                    <div style="display:flex;gap:12px;justify-content:flex-end">
+                        <button type="button" onclick="fecharModalManutencao()" class="btn-ghost">Cancelar</button>
+                        <button type="submit" class="btn-gold">Salvar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
         const API_URL = 'https://loja-carros-backend.onrender.com/api';
-        let veiculo = null;
-        let clientes = [];
-        let chartInvestimento = null;
+        let veiculo = null, clientes = [], chartInvestimento = null;
+        let clienteSelecionadoId = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
             const id = localStorage.getItem('veiculoDetalheId')
-            || new URLSearchParams(window.location.search).get('id')
-            || new URLSearchParams(window.location.hash.replace('#','?')).get('id');
-            if (!id) {
-                alert('ID do veículo não fornecido');
-                window.close();
-                return;
-            }
+                || new URLSearchParams(window.location.search).get('id')
+                || new URLSearchParams(window.location.hash.replace('#','?')).get('id');
+            if (!id) { mostrarToast('ID do veículo não fornecido', 'error'); return; }
             await Promise.all([carregarVeiculo(id), carregarClientes()]);
             mostrarTab('financeiro');
         });
@@ -282,7 +380,6 @@
                 renderizar();
             } catch(e) {
                 mostrarToast('Erro ao carregar veículo: ' + e.message, 'error');
-                setTimeout(() => window.close(), 2000);
             }
         }
 
@@ -291,34 +388,30 @@
                 const r = await fetch(`${API_URL}/clientes`);
                 const res = await r.json();
                 if (res.success) clientes = res.data;
+                renderizarListaClientes('');
             } catch(e) {}
         }
 
         function renderizar() {
             document.getElementById('subtitulo').textContent = `${veiculo.marca} ${veiculo.modelo} ${veiculo.ano}`;
             document.getElementById('tituloVeiculo').textContent = `${veiculo.marca} ${veiculo.modelo}`;
-            
-            document.getElementById('infoBasica').innerHTML = `
-                <span>${veiculo.ano}</span> • 
-                <span>${formatarKm(veiculo.km)} km</span> • 
-                <span>${veiculo.cor}</span> • 
-                <span>${veiculo.cambio}</span> • 
-                <span>${veiculo.combustivel}</span>
-            `;
+            document.getElementById('infoBasica').innerHTML = [
+                veiculo.ano, `${formatarKm(veiculo.km)} km`, veiculo.cor, veiculo.cambio, veiculo.combustivel
+            ].map(v => `<span style="background:var(--dark-3);padding:4px 10px;border-radius:6px">${v}</span>`).join('');
 
-            const investReal = veiculo.investimento_real || veiculo.total_investido || 0;
-            document.getElementById('investimentoTotal').textContent = formatarMoeda(investReal);
+            const inv = veiculo.investimento_real || veiculo.total_investido || 0;
+            document.getElementById('investimentoTotal').textContent = formatarMoeda(inv);
 
-            const badgeColor = veiculo.status === 'Vendido' ? 'bg-green-100 text-green-800' : 
-                                veiculo.status === 'Reservado' ? 'bg-yellow-100 text-yellow-800' : 
-                                'bg-blue-100 text-blue-800';
-            document.getElementById('statusBadge').innerHTML = `<span class="px-3 py-1 rounded-full text-sm font-bold ${badgeColor}">${veiculo.status}</span>`;
+            const badgeStyle = veiculo.status === 'Vendido' ? 'background:rgba(74,222,128,0.15);color:#4ade80'
+                : veiculo.status === 'Reservado' ? 'background:rgba(234,179,8,0.15);color:#facc15'
+                : 'background:rgba(59,130,246,0.15);color:#60a5fa';
+            document.getElementById('statusBadge').innerHTML =
+                `<span style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;${badgeStyle}">${veiculo.status}</span>`;
 
             renderizarFinanceiro();
             renderizarDespesas();
             renderizarManutencoes();
             renderizarHistorico();
-
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('conteudo').classList.remove('hidden');
             lucide.createIcons();
@@ -326,323 +419,278 @@
 
         function renderizarFinanceiro() {
             document.getElementById('valorCompra').textContent = formatarMoeda(veiculo.valor_compra || 0);
-            document.getElementById('custosExtras').textContent = formatarMoeda(veiculo.total_despesas_detalhadas || veiculo.custos_adicionais || 0);
+            document.getElementById('custosExtras').textContent = formatarMoeda(veiculo.custos_adicionais || 0);
             document.getElementById('valorAnunciado').textContent = formatarMoeda(veiculo.valor_anunciado || 0);
-            
-            const lucro = (veiculo.valor_anunciado || 0) - (veiculo.investimento_real || veiculo.total_investido || 0);
-            const margemClass = lucro >= 0 ? 'text-green-900' : 'text-red-900';
-            document.getElementById('lucroProjetado').innerHTML = `<span class="${margemClass}">${formatarMoeda(lucro)}</span>`;
+
+            const lucro = (veiculo.valor_anunciado || 0) - (veiculo.investimento_real || veiculo.total_investido || (veiculo.valor_compra || 0) + (veiculo.custos_adicionais || 0));
+            const elLucro = document.getElementById('lucroProjetado');
+            elLucro.textContent = formatarMoeda(lucro);
+            elLucro.style.color = lucro >= 0 ? '#4ade80' : '#f87171';
 
             // Gráfico
-            const ctx = document.getElementById('graficoInvestimento');
+            Chart.defaults.color = '#8A91A8';
+            Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
             if (chartInvestimento) chartInvestimento.destroy();
-            
-            const despesas = veiculo.despesas || [];
-            const totalDespesas = despesas.reduce((sum, d) => sum + (Number(d.valor) || 0), 0);
-            const totalManutencoes = (veiculo.manutencoes || []).reduce((sum, m) => sum + (Number(m.valor) || 0), 0);
-            
-            chartInvestimento = new Chart(ctx, {
+            chartInvestimento = new Chart(document.getElementById('graficoInvestimento'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Compra', 'Despesas', 'Manutenções'],
-                    datasets: [{
-                        data: [veiculo.valor_compra || 0, totalDespesas, totalManutencoes],
-                        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981']
-                    }]
+                    labels: ['Compra', 'Custos Adicionais'],
+                    datasets: [{ data: [veiculo.valor_compra || 0, veiculo.custos_adicionais || 0], backgroundColor: ['#60a5fa','#facc15'], borderColor: ['#3b82f6','#ca8a04'], borderWidth: 2 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 16 } } }, cutout: '65%' }
             });
 
-            // Seção de venda
+            // Seção Venda
             if (veiculo.status === 'Vendido') {
                 document.getElementById('secaoVenda').innerHTML = `
-                    <div class="bg-green-50 p-4 rounded-lg">
-                        <h3 class="font-bold text-green-900 mb-3 flex items-center gap-2">
-                            <i data-lucide="check-circle" class="w-5 h-5"></i>
-                            Veículo Vendido
-                        </h3>
-                        <div class="space-y-2 text-sm">
-                            <p><strong>Valor:</strong> ${formatarMoeda(veiculo.valor_venda || 0)}</p>
-                            <p><strong>Forma:</strong> ${veiculo.forma_pagamento || 'Não informado'}</p>
-                            <p><strong>Data:</strong> ${formatarData(veiculo.data_venda)}</p>
-                            <p><strong>Lucro:</strong> ${formatarMoeda(veiculo.lucro_bruto || 0)}</p>
+                    <div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:14px;padding:20px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+                            <div style="width:36px;height:36px;background:rgba(74,222,128,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center">
+                                <i data-lucide="check-circle" style="width:18px;height:18px;color:#4ade80"></i>
+                            </div>
+                            <h3 style="font-weight:700;color:#4ade80">Veículo Vendido</h3>
                         </div>
-                    </div>
-                `;
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                            ${[
+                                ['Valor', formatarMoeda(veiculo.valor_venda || 0)],
+                                ['Forma', veiculo.forma_pagamento || '—'],
+                                ['Data', formatarData(veiculo.data_venda)],
+                                ['Lucro Bruto', formatarMoeda(veiculo.lucro_bruto || 0)]
+                            ].map(([k,v]) => `<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px"><p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">${k}</p><p style="font-weight:600;color:var(--text)">${v}</p></div>`).join('')}
+                        </div>
+                    </div>`;
             } else {
                 document.getElementById('secaoVenda').innerHTML = `
                     <div>
-                        <h3 class="font-bold text-gray-700 mb-3">Ações</h3>
-                        <button onclick="abrirModalVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition">
-                            Registrar Venda
+                        <h3 style="font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                            <i data-lucide="handshake" style="width:18px;height:18px;color:var(--gold)"></i> Ações
+                        </h3>
+                        <button onclick="abrirModalVenda()" class="btn-green" style="width:100%;font-size:1rem;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+                            <i data-lucide="check-circle" style="width:20px;height:20px"></i> Registrar Venda
                         </button>
-                    </div>
-                `;
+                    </div>`;
             }
             lucide.createIcons();
         }
 
         function renderizarDespesas() {
-            const despesas = veiculo.despesas || [];
             const lista = document.getElementById('listaDespesas');
-            
-            if (despesas.length === 0) {
-                lista.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma despesa registrada</p>';
-                return;
+            const despesas = veiculo.despesas || [];
+            if (!despesas.length) {
+                lista.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)"><i data-lucide="inbox" style="width:40px;height:40px;margin:0 auto 12px;display:block;opacity:0.4"></i><p>Nenhuma despesa registrada</p></div>`;
+                lucide.createIcons(); return;
             }
-
             lista.innerHTML = despesas.map(d => {
-                const catClass = 'categoria-' + (d.categoria || 'outros').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
-                return `
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="categoria-badge ${catClass}">${d.categoria || 'Outros'}</span>
-                                <span class="text-xs text-gray-500">${formatarData(d.data)}</span>
-                            </div>
-                            <p class="font-medium text-gray-800">${d.descricao}</p>
+                const cat = (d.categoria||'outros').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'');
+                return `<div class="item-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <div style="flex:1">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                            <span class="categoria-badge categoria-${cat}">${d.categoria||'Outros'}</span>
+                            <span style="font-size:0.75rem;color:var(--text-muted)">${formatarData(d.data)}</span>
                         </div>
-                        <p class="font-bold text-gray-900 text-lg ml-4">${formatarMoeda(d.valor)}</p>
+                        <p style="font-weight:500;color:var(--text)">${d.descricao}</p>
                     </div>
-                `;
+                    <p style="font-weight:700;color:var(--text);white-space:nowrap;font-family:'Syne',sans-serif">${formatarMoeda(d.valor)}</p>
+                </div>`;
             }).join('');
         }
 
         function renderizarManutencoes() {
-            const manutencoes = veiculo.manutencoes || [];
             const lista = document.getElementById('listaManutencoes');
-            
-            if (manutencoes.length === 0) {
-                lista.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma manutenção registrada</p>';
-                return;
+            const mans = veiculo.manutencoes || [];
+            if (!mans.length) {
+                lista.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)"><i data-lucide="wrench" style="width:40px;height:40px;margin:0 auto 12px;display:block;opacity:0.4"></i><p>Nenhuma manutenção registrada</p></div>`;
+                lucide.createIcons(); return;
             }
-
-            lista.innerHTML = manutencoes.map(m => `
-                <div class="p-3 bg-gray-50 rounded-lg">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="font-medium text-gray-800">${m.descricao}</p>
-                        <p class="font-bold text-gray-900">${formatarMoeda(m.valor)}</p>
+            lista.innerHTML = mans.map(m => `
+                <div class="item-row">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                        <div style="flex:1">
+                            <p style="font-weight:600;color:var(--text);margin-bottom:4px">${m.descricao}</p>
+                            <div style="display:flex;gap:12px;font-size:0.78rem;color:var(--text-muted)">
+                                <span>${formatarData(m.data)}</span>
+                                ${m.observacao ? `<span>• ${m.observacao}</span>` : ''}
+                            </div>
+                        </div>
+                        <p style="font-weight:700;color:var(--text);white-space:nowrap;font-family:'Syne',sans-serif">${formatarMoeda(m.valor)}</p>
                     </div>
-                    <div class="flex items-center gap-4 text-xs text-gray-500">
-                        <span>${formatarData(m.data)}</span>
-                        ${m.observacao ? '<span>• ' + m.observacao + '</span>' : ''}
-                    </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
 
         function renderizarHistorico() {
             const eventos = [];
-            eventos.push({ data: veiculo.data_compra, texto: 'Veículo comprado', icone: 'shopping-cart', cor: 'blue' });
-            
-            (veiculo.despesas || []).forEach(d => {
-                eventos.push({ data: d.data, texto: `Despesa: ${d.descricao}`, icone: 'dollar-sign', cor: 'yellow' });
-            });
-            
-            (veiculo.manutencoes || []).forEach(m => {
-                eventos.push({ data: m.data, texto: `Manutenção: ${m.descricao}`, icone: 'wrench', cor: 'green' });
-            });
-            
-            if (veiculo.data_venda) {
-                eventos.push({ data: veiculo.data_venda, texto: 'Veículo vendido', icone: 'check-circle', cor: 'purple' });
+            if (veiculo.data_compra) eventos.push({ data: veiculo.data_compra, texto: 'Veículo comprado', icone: 'shopping-cart', cor: '#60a5fa', bg: 'rgba(96,165,250,0.12)' });
+            (veiculo.despesas||[]).forEach(d => eventos.push({ data: d.data, texto: `Despesa: ${d.descricao} — ${formatarMoeda(d.valor)}`, icone: 'receipt', cor: '#facc15', bg: 'rgba(250,204,21,0.12)' }));
+            (veiculo.manutencoes||[]).forEach(m => eventos.push({ data: m.data, texto: `Manutenção: ${m.descricao} — ${formatarMoeda(m.valor)}`, icone: 'wrench', cor: '#4ade80', bg: 'rgba(74,222,128,0.12)' }));
+            if (veiculo.data_venda) eventos.push({ data: veiculo.data_venda, texto: 'Veículo vendido', icone: 'check-circle', cor: var_gold(), bg: 'rgba(201,168,76,0.12)' });
+            eventos.sort((a,b) => new Date(b.data) - new Date(a.data));
+
+            if (!eventos.length) {
+                document.getElementById('linhaDoTempo').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">Nenhum evento registrado</p>';
+                return;
             }
-            
-            eventos.sort((a, b) => new Date(b.data) - new Date(a.data));
-            
             document.getElementById('linhaDoTempo').innerHTML = eventos.map(e => `
-                <div class="flex gap-4 mb-4">
-                    <div class="flex-shrink-0 w-10 h-10 bg-${e.cor}-100 rounded-full flex items-center justify-center">
-                        <i data-lucide="${e.icone}" class="w-5 h-5 text-${e.cor}-600"></i>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:${e.bg}">
+                        <i data-lucide="${e.icone}" style="width:18px;height:18px;color:${e.cor}"></i>
                     </div>
-                    <div>
-                        <p class="font-medium text-gray-800">${e.texto}</p>
-                        <p class="text-sm text-gray-500">${formatarData(e.data)}</p>
+                    <div style="padding-top:8px">
+                        <p style="font-weight:500;color:var(--text);margin-bottom:2px">${e.texto}</p>
+                        <p style="font-size:0.78rem;color:var(--text-muted)">${formatarData(e.data)}</p>
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
             lucide.createIcons();
         }
 
+        function var_gold() { return '#C9A84C'; }
+
         function mostrarTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-            
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('active');
         }
 
-        // Modals
+        // ── Modal Venda ──
         function abrirModalVenda() {
-            popularSelectClientes();
+            clienteSelecionadoId = null;
+            document.getElementById('vendaClienteId').value = '';
             document.getElementById('vendaValor').value = veiculo.valor_anunciado || '';
             document.getElementById('buscaCliente').value = '';
+            document.getElementById('clienteSelecionadoInfo').style.display = 'none';
+            renderizarListaClientes('');
             document.getElementById('modalVenda').classList.remove('hidden');
+            lucide.createIcons();
         }
 
-        function popularSelectClientes(filtro = '') {
-            const select = document.getElementById('vendaCliente');
-            let clientesFiltrados = clientes;
-            
+        function fecharModalVenda() { document.getElementById('modalVenda').classList.add('hidden'); }
+
+        function renderizarListaClientes(filtro) {
+            const lista = document.getElementById('listaClientesBusca');
+            let filtered = clientes;
             if (filtro) {
-                const termo = filtro.toLowerCase();
-                clientesFiltrados = clientes.filter(c => 
-                    (c.nome || '').toLowerCase().includes(termo) ||
-                    (c.cpf || '').includes(termo) ||
-                    (c.telefone || '').includes(termo)
-                );
+                const t = filtro.toLowerCase();
+                filtered = clientes.filter(c => (c.nome||'').toLowerCase().includes(t) || (c.cpf||'').includes(t) || (c.telefone||'').includes(t));
             }
-            
-            select.innerHTML = '<option value="">Selecione o cliente</option>' + 
-                clientesFiltrados.map(c => `<option value="${c.id}">${c.nome} - ${c.cpf || 'CPF não informado'}</option>`).join('');
+            if (!filtered.length) {
+                lista.innerHTML = `<p style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.85rem">Nenhum cliente encontrado</p>`;
+                return;
+            }
+            lista.innerHTML = filtered.slice(0, 8).map(c => `
+                <div class="cliente-item ${c.id == clienteSelecionadoId ? 'selecionado' : ''}" onclick="selecionarCliente(${c.id}, '${(c.nome||'').replace(/'/g,"\\'")}')">
+                    <div>
+                        <p style="font-weight:600;color:var(--text);font-size:0.9rem">${c.nome||'Sem nome'}</p>
+                        <p style="font-size:0.75rem;color:var(--text-muted)">${c.cpf||''} ${c.telefone ? '• '+c.telefone : ''}</p>
+                    </div>
+                    ${c.id == clienteSelecionadoId ? '<i data-lucide="check-circle" style="width:18px;height:18px;color:var(--gold)"></i>' : ''}
+                </div>`).join('');
+            lucide.createIcons();
         }
 
         function filtrarClientes() {
-            const busca = document.getElementById('buscaCliente').value;
-            popularSelectClientes(busca);
+            renderizarListaClientes(document.getElementById('buscaCliente').value);
         }
 
-        function fecharModalVenda() {
-            document.getElementById('modalVenda').classList.add('hidden');
+        function selecionarCliente(id, nome) {
+            clienteSelecionadoId = id;
+            document.getElementById('vendaClienteId').value = id;
+            document.getElementById('clienteSelecionadoNome').textContent = nome;
+            document.getElementById('clienteSelecionadoInfo').style.display = 'block';
+            renderizarListaClientes(document.getElementById('buscaCliente').value);
         }
 
         async function salvarVenda(e) {
             e.preventDefault();
-            const dados = {
-                veiculoId: veiculo.id,
-                clienteId: document.getElementById('vendaCliente').value,
-                valor_venda: document.getElementById('vendaValor').value,
-                forma_pagamento: document.getElementById('vendaFormaPgto').value
-            };
-            
+            if (!clienteSelecionadoId) { mostrarToast('Selecione um cliente', 'error'); return; }
             try {
                 const r = await fetch(`${API_URL}/veiculos/${veiculo.id}`, {
                     method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({
                         status: 'Vendido',
-                        valor_venda: dados.valor_venda,
-                        forma_pagamento: dados.forma_pagamento,
-                        cliente_id: dados.clienteId,
+                        valor_venda: document.getElementById('vendaValor').value,
+                        forma_pagamento: document.getElementById('vendaFormaPgto').value,
+                        cliente_id: clienteSelecionadoId,
                         data_venda: new Date().toISOString().split('T')[0]
                     })
                 });
                 const res = await r.json();
-                if (res.success) {
-                    mostrarToast('Venda registrada com sucesso!');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    mostrarToast('Erro: ' + res.error, 'error');
-                }
-            } catch(e) {
-                mostrarToast('Erro ao salvar venda', 'error');
-            }
+                if (res.success) { mostrarToast('Venda registrada!'); fecharModalVenda(); setTimeout(() => location.reload(), 1200); }
+                else mostrarToast('Erro: ' + res.error, 'error');
+            } catch(e) { mostrarToast('Erro ao salvar venda', 'error'); }
         }
 
+        // ── Modal Despesa ──
         function adicionarDespesa() {
             document.getElementById('formDespesa').reset();
             document.getElementById('despesaData').valueAsDate = new Date();
             document.getElementById('modalDespesa').classList.remove('hidden');
         }
-
-        function fecharModalDespesa() {
-            document.getElementById('modalDespesa').classList.add('hidden');
-        }
-
+        function fecharModalDespesa() { document.getElementById('modalDespesa').classList.add('hidden'); }
         async function salvarDespesa(e) {
             e.preventDefault();
-            const dados = {
-                veiculo_id: veiculo.id,
-                categoria: document.getElementById('despesaCategoria').value,
-                descricao: document.getElementById('despesaDescricao').value,
-                valor: document.getElementById('despesaValor').value,
-                data: document.getElementById('despesaData').value
-            };
-            
             try {
                 const r = await fetch(`${API_URL}/despesas-veiculo`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(dados)
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        veiculo_id: veiculo.id,
+                        categoria: document.getElementById('despesaCategoria').value,
+                        descricao: document.getElementById('despesaDescricao').value,
+                        valor: document.getElementById('despesaValor').value,
+                        data: document.getElementById('despesaData').value
+                    })
                 });
                 const res = await r.json();
-                if (res.success) {
-                    mostrarToast('Despesa adicionada com sucesso!');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    mostrarToast('Erro: ' + res.error, 'error');
-                }
-            } catch(e) {
-                mostrarToast('Erro ao salvar despesa', 'error');
-            }
+                if (res.success) { mostrarToast('Despesa adicionada!'); fecharModalDespesa(); setTimeout(() => location.reload(), 1200); }
+                else mostrarToast('Erro: ' + res.error, 'error');
+            } catch(e) { mostrarToast('Erro ao salvar despesa', 'error'); }
         }
 
+        // ── Modal Manutenção ──
         function adicionarManutencao() {
             document.getElementById('formManutencao').reset();
             document.getElementById('manutencaoData').valueAsDate = new Date();
             document.getElementById('modalManutencao').classList.remove('hidden');
         }
-
-        function fecharModalManutencao() {
-            document.getElementById('modalManutencao').classList.add('hidden');
-        }
-
+        function fecharModalManutencao() { document.getElementById('modalManutencao').classList.add('hidden'); }
         async function salvarManutencao(e) {
             e.preventDefault();
-            const dados = {
-                veiculo_id: veiculo.id,
-                descricao: document.getElementById('manutencaoDescricao').value,
-                valor: document.getElementById('manutencaoValor').value,
-                data: document.getElementById('manutencaoData').value,
-                observacao: document.getElementById('manutencaoObs').value
-            };
-            
             try {
                 const r = await fetch(`${API_URL}/manutencoes`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(dados)
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        veiculo_id: veiculo.id,
+                        descricao: document.getElementById('manutencaoDescricao').value,
+                        valor: document.getElementById('manutencaoValor').value,
+                        data: document.getElementById('manutencaoData').value,
+                        observacao: document.getElementById('manutencaoObs').value
+                    })
                 });
                 const res = await r.json();
-                if (res.success) {
-                    mostrarToast('Manutenção adicionada com sucesso!');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    mostrarToast('Erro: ' + res.error, 'error');
-                }
-            } catch(e) { mostrarToast('Erro ao salvar manutenção', 'error');
-            }
+                if (res.success) { mostrarToast('Manutenção adicionada!'); fecharModalManutencao(); setTimeout(() => location.reload(), 1200); }
+                else mostrarToast('Erro: ' + res.error, 'error');
+            } catch(e) { mostrarToast('Erro ao salvar manutenção', 'error'); }
         }
 
         function voltarAdmin() {
-            window.opener ? window.close() : window.location.href = 'admin.html';
+            window.location.href = 'admin.html';
         }
 
         function mostrarToast(msg, tipo = 'success') {
-            const cores = {success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500'};
-            const icones = {success: 'check-circle', error: 'x-circle', info: 'info'};
-            const toast = document.createElement('div');
-            toast.className = `toast ${cores[tipo]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3`;
-            toast.innerHTML = `
-                <i data-lucide="${icones[tipo]}" class="w-5 h-5"></i>
-                <span>${msg}</span>
-            `;
-            document.body.appendChild(toast);
+            const cores = {success:'#16a34a', error:'#dc2626', info:'#2563eb'};
+            const icones = {success:'check-circle', error:'x-circle', info:'info'};
+            const t = document.createElement('div');
+            t.style.background = cores[tipo] || '#374151';
+            t.className = 'toast';
+            t.innerHTML = `<i data-lucide="${icones[tipo]||'info'}" style="width:18px;height:18px"></i><span>${msg}</span>`;
+            document.body.appendChild(t);
             lucide.createIcons();
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => t.remove(), 3000);
         }
 
-        function formatarMoeda(v) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
-        }
-
-        function formatarKm(v) {
-            return new Intl.NumberFormat('pt-BR').format(Number(v) || 0);
-        }
-
-        function formatarData(d) {
-            if (!d) return 'Data não informada';
-            return new Date(d).toLocaleDateString('pt-BR');
-        }
+        function formatarMoeda(v) { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); }
+        function formatarKm(v) { return new Intl.NumberFormat('pt-BR').format(Number(v)||0); }
+        function formatarData(d) { if (!d) return '—'; return new Date(d+'T12:00:00').toLocaleDateString('pt-BR'); }
     </script>
 </body>
 </html>
