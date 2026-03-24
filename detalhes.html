@@ -36,7 +36,7 @@
             <a href="index.html" class="flex items-center space-x-3 hover:opacity-90 transition">
                 <i data-lucide="arrow-left" class="w-6 h-6"></i>
                 <div>
-                    <h1 class="text-xl font-bold" id="nomeLoja">Auto Premium</h1>
+                    <h1 class="text-xl font-bold" id="nomeLoja">AB Veículos</h1>
                     <p class="text-xs opacity-80">Carros Seminovos</p>
                 </div>
             </a>
@@ -197,7 +197,9 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
-            const id = new URLSearchParams(window.location.search).get('id');
+            const id = new URLSearchParams(window.location.search).get('id')
+            || new URLSearchParams(window.location.hash.replace('#','?')).get('id')
+            || localStorage.getItem('veiculoDetalheId');
             if (!id) { mostrarErro(); return; }
             await Promise.all([carregarConfig(), carregarVeiculo(id)]);
             lucide.createIcons();
@@ -205,10 +207,10 @@
 
         async function carregarConfig() {
             try {
-                const r = await (await fetch(`${API_URL}?action=getConfig`)).json();
+                const r = await (await fetch(`${API_URL}/config`)).json();
                 if (r.success) {
                     config = r.data;
-                    document.getElementById('nomeLoja').textContent = config.nome_loja || 'Auto Premium';
+                    document.getElementById('nomeLoja').textContent = config.nome_loja || 'AB Veículos';
                     document.getElementById('whatsappFloat').href =
                         `https://wa.me/${config.telefone_whatsapp}?text=Olá! Gostaria de informações sobre um veículo.`;
                 }
@@ -217,7 +219,7 @@
 
         async function carregarVeiculo(id) {
             try {
-                const r = await (await fetch(`${API_URL}?action=getVeiculo&id=${id}`)).json();
+                const r = await (await fetch(`${API_URL}/veiculos/${id}`)).json();
                 if (!r.success || !r.data) { mostrarErro(); return; }
                 veiculo = r.data;
                 renderizarVeiculo();
@@ -235,7 +237,7 @@
             console.log('imagens array:', veiculo.imagens);
             
             const titulo = `${veiculo.marca} ${veiculo.modelo}`;
-            document.title = `${titulo} ${veiculo.ano} — ${config.nome_loja || 'Auto Premium'}`;
+            document.title = `${titulo} ${veiculo.ano} — ${config.nome_loja || 'AB Veículos'}`;
 
             document.getElementById('tituloVeiculo').textContent = titulo;
             document.getElementById('breadcrumbVeiculo').textContent = `${titulo} ${veiculo.ano}`;
@@ -373,7 +375,7 @@
         // ============================================
         async function carregarOutros(idAtual) {
             try {
-                const r = await (await fetch(`${API_URL}?action=getVeiculos&status=Disponível`)).json();
+                const r = await (await fetch(`${API_URL}/veiculos?status=Disponível`)).json();
                 if (!r.success) return;
                 const outros = r.data.filter(v => String(v.id) !== String(idAtual)).slice(0, 3);
                 if (outros.length === 0) return;
