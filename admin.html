@@ -232,6 +232,12 @@
                             <i data-lucide="plus" class="w-5 h-5 mr-2"></i>Adicionar Veículo
                         </button>
                     </div>
+                    <!-- Filtro de origem -->
+                    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+                        <button onclick="setFiltroOrigem('')" id="btnOrigTodos" style="padding:6px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;font-family:'Syne',sans-serif;border:none;cursor:pointer;transition:all 0.2s;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#0D0F14">Todos</button>
+                        <button onclick="setFiltroOrigem('Proprio')" id="btnOrigProprio" style="padding:6px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;font-family:'Syne',sans-serif;border:1.5px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s;background:transparent;color:var(--text-muted)">Próprios</button>
+                        <button onclick="setFiltroOrigem('Consignado')" id="btnOrigConsig" style="padding:6px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;font-family:'Syne',sans-serif;border:1.5px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s;background:transparent;color:var(--text-muted)">Consignados</button>
+                    </div>
                     <div id="listaVeiculos" class="space-y-4"></div>
                 </div>
             </div>
@@ -445,13 +451,41 @@
                             </select>
                         </div>
 
+                        <!-- ORIGEM -->
+                        <div class="md:col-span-2" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px">
+                            <label class="block text-sm font-medium mb-3" style="color:var(--text-muted)">Origem do Veículo*</label>
+                            <div style="display:flex;gap:12px">
+                                <label style="flex:1;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s" id="labelOrigProprio">
+                                    <input type="radio" name="origem_veiculo" id="origemProprio" value="Proprio" checked onchange="atualizarOrigemVeiculo()" style="accent-color:var(--gold);width:16px;height:16px;flex-shrink:0">
+                                    <div>
+                                        <p style="font-weight:600;color:var(--text);font-size:0.9rem">Próprio</p>
+                                        <p style="font-size:0.75rem;color:var(--text-muted)">Veículo da loja</p>
+                                    </div>
+                                </label>
+                                <label style="flex:1;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s" id="labelOrigConsig">
+                                    <input type="radio" name="origem_veiculo" id="origemConsignado" value="Consignado" onchange="atualizarOrigemVeiculo()" style="accent-color:var(--gold);width:16px;height:16px;flex-shrink:0">
+                                    <div>
+                                        <p style="font-weight:600;color:var(--text);font-size:0.9rem">Consignado</p>
+                                        <p style="font-size:0.75rem;color:var(--text-muted)">Veículo de terceiro</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- TIPO -->
                         <div>
-                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Tipo*</label>
-                            <select id="tipo" required class="w-full" onchange="atualizarTipoVeiculo()">
-                                <option value="Carro">🚗 Carro</option>
-                                <option value="Moto">🏍️ Moto</option>
-                            </select>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Tipo de Veículo*</label>
+                            <div style="display:flex;gap:8px">
+                                <label id="lblTipoCarro" style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--gold);background:rgba(201,168,76,0.08);cursor:pointer;transition:all 0.2s" onclick="setTipoRadio('Carro')">
+                                    <i data-lucide="car" style="width:18px;height:18px;color:var(--gold)"></i>
+                                    <span style="font-weight:600;color:var(--text);font-size:0.88rem">Carro</span>
+                                </label>
+                                <label id="lblTipoMoto" style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;transition:all 0.2s" onclick="setTipoRadio('Moto')">
+                                    <i data-lucide="bike" style="width:18px;height:18px;color:var(--text-muted)"></i>
+                                    <span style="font-weight:600;color:var(--text-muted);font-size:0.88rem">Moto</span>
+                                </label>
+                            </div>
+                            <input type="hidden" id="tipo" value="Carro">
                         </div>
 
                         <!-- ANO FABRICAÇÃO -->
@@ -477,24 +511,24 @@
                             <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Cor*</label>
                             <select id="cor" required class="w-full">
                                 <option value="">Selecione a cor</option>
-                                <option value="Branco">⬜ Branco</option>
-                                <option value="Prata">🔘 Prata</option>
-                                <option value="Preto">⬛ Preto</option>
-                                <option value="Cinza">🩶 Cinza</option>
-                                <option value="Vermelho">🟥 Vermelho</option>
-                                <option value="Azul">🟦 Azul</option>
-                                <option value="Azul Escuro">🔵 Azul Escuro</option>
-                                <option value="Verde">🟩 Verde</option>
-                                <option value="Amarelo">🟨 Amarelo</option>
-                                <option value="Laranja">🟧 Laranja</option>
-                                <option value="Marrom">🟫 Marrom</option>
-                                <option value="Bege">🟤 Bege</option>
-                                <option value="Vinho">🍷 Vinho</option>
-                                <option value="Rosa">🌸 Rosa</option>
-                                <option value="Champagne">✨ Champagne</option>
-                                <option value="Dourado">🥇 Dourado</option>
-                                <option value="Grafite">⚫ Grafite</option>
-                                <option value="Outra">🎨 Outra</option>
+                                <option value="Branco">Branco</option>
+                                <option value="Prata">Prata</option>
+                                <option value="Preto">Preto</option>
+                                <option value="Cinza">Cinza</option>
+                                <option value="Vermelho">Vermelho</option>
+                                <option value="Azul">Azul</option>
+                                <option value="Azul Escuro">Azul Escuro</option>
+                                <option value="Verde">Verde</option>
+                                <option value="Amarelo">Amarelo</option>
+                                <option value="Laranja">Laranja</option>
+                                <option value="Marrom">Marrom</option>
+                                <option value="Bege">Bege</option>
+                                <option value="Vinho">Vinho</option>
+                                <option value="Rosa">Rosa</option>
+                                <option value="Champagne">Champagne</option>
+                                <option value="Dourado">Dourado</option>
+                                <option value="Grafite">Grafite</option>
+                                <option value="Outra">Outra</option>
                             </select>
                         </div>
 
@@ -536,11 +570,11 @@
                             </select>
                         </div>
 
-                        <!-- VALOR COMPRA -->
-                        <div>
+                        <!-- VALOR COMPRA (somente próprio) -->
+                        <div id="campoValorCompra">
                             <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Valor de Compra*</label>
                             <div style="position:relative">
-                                <input type="text" id="valor_compra" required placeholder="R$ 0,00"
+                                <input type="text" id="valor_compra" placeholder="R$ 0,00"
                                     oninput="mascaraMoeda(this)" class="w-full" style="padding-left:42px">
                                 <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none">R$</span>
                             </div>
@@ -548,7 +582,7 @@
 
                         <!-- CUSTOS ADICIONAIS -->
                         <div>
-                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Custos Adicionais</label>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Custos da Loja</label>
                             <div style="position:relative">
                                 <input type="text" id="custos_adicionais" placeholder="R$ 0,00"
                                     oninput="mascaraMoeda(this)" class="w-full" style="padding-left:42px">
@@ -576,6 +610,66 @@
                                 <option value="Vendido">✔️ Vendido</option>
                             </select>
                         </div>
+                    </div>
+
+                    <!-- ══ SEÇÃO CONSIGNAÇÃO (aparece só se consignado) ══ -->
+                    <div id="secaoConsignacao" style="display:none;border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:20px;background:rgba(201,168,76,0.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center">
+                                <i data-lucide="handshake" style="width:16px;height:16px;color:var(--gold)"></i>
+                            </div>
+                            <h4 style="font-weight:700;color:var(--gold);font-family:'Syne',sans-serif;font-size:0.95rem">Dados do Proprietário e Consignação</h4>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Nome do Proprietário*</label>
+                                <input type="text" id="proprietario_nome" placeholder="Nome completo" class="w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Telefone</label>
+                                <input type="text" id="proprietario_telefone" placeholder="(00) 00000-0000" maxlength="15" oninput="mascaraTelefone(this)" class="w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">CPF / CNPJ</label>
+                                <input type="text" id="proprietario_cpf_cnpj" placeholder="000.000.000-00" maxlength="18" class="w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Prazo da Consignação</label>
+                                <input type="date" id="prazo_consignacao" class="w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Valor Combinado com Proprietário*</label>
+                                <div style="position:relative">
+                                    <input type="text" id="valor_combinado" placeholder="R$ 0,00" oninput="mascaraMoeda(this)" class="w-full" style="padding-left:42px">
+                                    <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none">R$</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Tipo de Comissão*</label>
+                                <select id="tipo_comissao" class="w-full" onchange="atualizarLabelComissao()">
+                                    <option value="Percentual">Percentual (%)</option>
+                                    <option value="Fixo">Valor Fixo (R$)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" id="labelValorComissao" style="color:var(--text-muted)">Comissão (%)*</label>
+                                <div style="position:relative">
+                                    <input type="text" id="valor_comissao" placeholder="0" oninput="mascaraMoeda(this)" class="w-full" style="padding-left:42px">
+                                    <span id="prefixComissao" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none">%</span>
+                                </div>
+                            </div>
+                            <div style="background:rgba(201,168,76,0.06);border-radius:10px;padding:12px">
+                                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Comissão estimada</p>
+                                <p id="comissaoEstimada" style="font-size:1.2rem;font-weight:700;color:var(--gold);font-family:'Syne',sans-serif">R$ —</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Observações</label>
+                                <textarea id="observacoes_consignacao" rows="2" placeholder="Acordos, condições especiais, etc." class="w-full"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex items-center gap-3 mt-2">
                             <label class="block text-sm font-medium text-slate-200">Destaque</label>
                             <button type="button" id="btnDestaque" onclick="toggleDestaque()"
@@ -714,7 +808,47 @@
         const API_URL = 'https://loja-carros-backend.onrender.com/api';
         
 
-const OPCIONAIS_DISPONIVEIS = ['Ar-condicionado', 'Direção hidráulica', 'Direção elétrica', 'Vidros elétricos', 'Travas elétricas', 'Retrovisores elétricos', 'Alarme', 'Air bag motorista', 'Air bag passageiro', 'Air bags laterais', 'ABS', 'Freios a disco', 'Sensor de estacionamento', 'Câmera de ré', 'Controle de tração', 'Controle de estabilidade', 'Piloto automático', 'Computador de bordo', 'Bancos em couro', 'Bancos aquecidos', 'Volante com regulagem de altura', 'Volante multifuncional', 'Rádio', 'CD player', 'Bluetooth', 'USB', 'Entrada auxiliar', 'Rodas de liga leve', 'Teto solar', 'Engate reboque', 'Rack de teto'];
+const OPCIONAIS_CARRO = [
+    'Ar-condicionado','Ar-condicionado digital','Direção hidráulica','Direção elétrica',
+    'Vidros elétricos','Travas elétricas','Retrovisores elétricos','Retrovisores rebatíveis',
+    'Alarme','Air bag motorista','Air bag passageiro','Air bags laterais','Air bag de joelho',
+    'ABS','Freios a disco','Freios a disco nas 4 rodas','EBD','Assistência de frenagem',
+    'Sensor de estacionamento dianteiro','Sensor de estacionamento traseiro','Câmera de ré',
+    'Câmera 360°','Controle de tração','Controle de estabilidade','Piloto automático',
+    'Piloto automático adaptativo','Computador de bordo','Painel digital','Head-up display',
+    'Bancos em couro','Bancos aquecidos','Bancos com memória','Banco do motorista elétrico',
+    'Volante com regulagem de altura','Volante multifuncional','Volante em couro',
+    'Rádio','CD player','Bluetooth','USB','Entrada auxiliar','Apple CarPlay',
+    'Android Auto','Sistema de som premium','Tela multimídia',
+    'Rodas de liga leve','Teto solar','Teto panorâmico','Faróis de neblina',
+    'Faróis LED','Faróis de xenônio','Luz diurna LED','Sensor crepuscular',
+    'Limpador traseiro','Desembaçador traseiro','Engate reboque','Rack de teto',
+    'Porta-malas automático','Partida remota','Keyless entry','Start/stop automático'
+];
+const OPCIONAIS_MOTO = [
+    'Freio ABS','Freio ABS combinado','Freio a disco dianteiro','Freio a disco traseiro',
+    'Controle de tração','Controle de estabilidade','Modos de pilotagem',
+    'Partida elétrica','Partida kickstart',
+    'Painel digital','Painel analógico','Painel semi-digital','Painel LCD',
+    'Luz LED','Faróis LED','Lanterna LED','Pisca LED',
+    'Escapamento esportivo','Escapamento original',
+    'Baú traseiro','Alforjes laterais','Suporte para baú','Rack traseiro',
+    'Protetor de motor','Protetor de carenagem','Para-brisa',
+    'Guidão regulável','Manoplas aquecidas','Punhos aquecidos',
+    'Bluetooth','GPS integrado','USB','Tomada 12V',
+    'Suspensão regulável','Suspensão invertida',
+    'Rodas de liga leve','Rodas de arame',
+    'Pneu tubeless','Kit de ferramentas',
+    'Banco bipartido','Banco rebaixado','Banco aquecido',
+    'Protetor de corrente','Corrente reforçada',
+    'Alarme','Rastreador','Bloqueio de ignição',
+    'Espelhos retrovisores reguláveis','Carenagem completa','Carenagem dianteira'
+];
+function getOpcionaisAtivos() {
+    const tipo = document.getElementById('tipo') ? document.getElementById('tipo').value : 'Carro';
+    return tipo === 'Moto' ? OPCIONAIS_MOTO : OPCIONAIS_CARRO;
+}
+const OPCIONAIS_DISPONIVEIS = OPCIONAIS_CARRO;
 
 const MARCAS_MODELOS = {
     'Volkswagen': ['Gol', 'Polo', 'Virtus', 'T-Cross', 'Nivus', 'Saveiro', 'Voyage', 'Fox', 'Up!'],
@@ -810,13 +944,35 @@ const MARCAS_MODELOS = {
             return '';
         }
 
+        let filtroOrigemAdmin = '';
+        function setFiltroOrigem(orig) {
+            filtroOrigemAdmin = orig;
+            const btns = {
+                '': 'btnOrigTodos',
+                'Proprio': 'btnOrigProprio',
+                'Consignado': 'btnOrigConsig'
+            };
+            Object.entries(btns).forEach(([k, id]) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                const active = k === orig;
+                btn.style.background = active ? 'linear-gradient(135deg,var(--gold),var(--gold-light))' : 'transparent';
+                btn.style.color = active ? '#0D0F14' : 'var(--text-muted)';
+                btn.style.border = active ? 'none' : '1.5px solid rgba(255,255,255,0.1)';
+            });
+            renderizarVeiculos();
+        }
+
         function renderizarVeiculos() {
             const lista = document.getElementById('listaVeiculos');
-            if (todosVeiculos.length === 0) {
-                lista.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum veículo cadastrado</p>';
+            const veiculosFiltradosAdmin = filtroOrigemAdmin
+                ? todosVeiculos.filter(v => (v.origem_veiculo || 'Proprio') === filtroOrigemAdmin)
+                : todosVeiculos;
+            if (veiculosFiltradosAdmin.length === 0) {
+                lista.innerHTML = '<p class="text-center py-8" style="color:var(--text-muted)">Nenhum veículo encontrado</p>';
                 return;
             }
-            lista.innerHTML = todosVeiculos.map(v => `
+            lista.innerHTML = veiculosFiltradosAdmin.map(v => `
                 <div class="border  rounded-lg overflow-hidden hover:shadow-md transition" style="border-color:rgba(255,255,255,0.07)">
                     <div class="p-4 flex gap-4">
                         <img src="${converterImagem(v.imagem_principal)}" 
@@ -830,6 +986,7 @@ const MARCAS_MODELOS = {
                             <div class="flex gap-2 mt-2 flex-wrap">
                                 <span class="badge ${v.status==='Disponível'?'badge-green':v.status==='Vendido'?'badge-blue':v.status==='Pausado'?'badge-gray':'badge-yellow'}" style="${v.status==='Pausado'?'background:rgba(148,163,184,0.12);color:#94a3b8':''}">${v.status}${v.status==='Pausado'?' ⏸️':''}</span>
                                 ${v.tipo==='Moto'?'<span class=\"badge\" style=\"background:rgba(251,146,60,0.12);color:#fb923c;margin-left:4px\">🏍️ Moto</span>':''}
+                                ${v.origem_veiculo==='Consignado'?'<span class=\"badge\" style=\"background:rgba(201,168,76,0.12);color:var(--gold);margin-left:4px\">Consignado</span>':''}
                                 ${v.destaque ? '<span class="badge badge-gold">⭐ Destaque</span>' : ''}
                             </div>
                         </div>
@@ -863,9 +1020,11 @@ const MARCAS_MODELOS = {
             
             imagensSelecionadas = [];
             document.getElementById('previewContainer').innerHTML = '';
-            document.getElementById('tipo').value = 'Carro';
+            setTipoRadio('Carro');
             document.getElementById('ano_modelo').value = '';
             document.getElementById('chassi').value = '';
+            document.getElementById('origemProprio').checked = true;
+            atualizarOrigemVeiculo();
             // Resetar toggle destaque
             setDestaque('NAO');
             carregarMarcasFipe();
@@ -905,9 +1064,34 @@ const MARCAS_MODELOS = {
             document.getElementById('cor').value = veiculo.cor || '';
             document.getElementById('placa').value = veiculo.placa || '';
             document.getElementById('chassi').value = veiculo.chassi || '';
-            document.getElementById('tipo').value = veiculo.tipo || 'Carro';
+            setTipoRadio(veiculo.tipo || 'Carro');
             document.getElementById('ano_modelo').value = veiculo.ano_modelo || '';
             document.getElementById('cambio').value = veiculo.cambio;
+            // Popular origem e consignação
+            const origem = veiculo.origem_veiculo || 'Proprio';
+            const radioOrig = document.getElementById(origem === 'Consignado' ? 'origemConsignado' : 'origemProprio');
+            if (radioOrig) radioOrig.checked = true;
+            atualizarOrigemVeiculo();
+            if (origem === 'Consignado') {
+                try {
+                    const rc = await fetch(`${API_URL}/consignacoes/${veiculo.id}`);
+                    const rj = await rc.json();
+                    if (rj.success && rj.data) {
+                        const cd = rj.data;
+                        document.getElementById('proprietario_nome').value = cd.proprietario_nome || '';
+                        document.getElementById('proprietario_telefone').value = cd.proprietario_telefone || '';
+                        document.getElementById('proprietario_cpf_cnpj').value = cd.proprietario_cpf_cnpj || '';
+                        document.getElementById('prazo_consignacao').value = cd.prazo_consignacao || '';
+                        const fmtC = v => v ? Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '';
+                        document.getElementById('valor_combinado').value = fmtC(cd.valor_combinado);
+                        document.getElementById('tipo_comissao').value = cd.tipo_comissao || 'Percentual';
+                        document.getElementById('valor_comissao').value = fmtC(cd.valor_comissao);
+                        document.getElementById('observacoes_consignacao').value = cd.observacoes || '';
+                        atualizarLabelComissao();
+                        calcularComissaoEstimada();
+                    }
+                } catch(e) {}
+            }
             document.getElementById('combustivel').value = veiculo.combustivel;
             // Popular campos com máscara
             const fmt = v => v ? Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
@@ -932,7 +1116,10 @@ const MARCAS_MODELOS = {
             // Desmascarar valores monetários e km
             const desmascararMoeda = id => parseFloat((document.getElementById(id).value||'0').replace(/[R$\s.]/g,'').replace(',','.')) || 0;
             const desmascararKm = id => parseInt((document.getElementById(id).value||'0').replace(/\D/g,'')) || 0;
+            const origemVeiculo = document.querySelector('input[name="origem_veiculo"]:checked')?.value || 'Proprio';
+            const isConsignado = origemVeiculo === 'Consignado';
             const dados = {
+                origem_veiculo: origemVeiculo,
                 tipo: document.getElementById('tipo').value,
                 marca: document.getElementById('marca').value,
                 modelo: document.getElementById('modelo').value,
@@ -952,6 +1139,19 @@ const MARCAS_MODELOS = {
                 opcionais: document.getElementById('opcionais').value,
                 destaque: document.getElementById('destaque').value === 'SIM'
             };
+            // Dados de consignação (enviados separadamente)
+            const dadosConsig = isConsignado ? {
+                proprietario_nome:     document.getElementById('proprietario_nome').value,
+                proprietario_telefone: document.getElementById('proprietario_telefone').value,
+                proprietario_cpf_cnpj: document.getElementById('proprietario_cpf_cnpj').value,
+                valor_combinado:       desmascararMoeda('valor_combinado'),
+                tipo_comissao:         document.getElementById('tipo_comissao').value,
+                valor_comissao:        desmascararMoeda('valor_comissao'),
+                prazo_consignacao:     document.getElementById('prazo_consignacao').value || null,
+                observacoes:           document.getElementById('observacoes_consignacao').value
+            } : null;
+            // Para consignados, valor_compra não se aplica
+            if (isConsignado) dados.valor_compra = 0;
             console.log('💾 Salvando veículo:', dados);
             try {
                 let action = 'addVeiculo';
@@ -971,6 +1171,16 @@ const MARCAS_MODELOS = {
                 const result = await res.json();
                 console.log('📊 Resultado do salvamento:', result);
                 if (result.success) {
+                    // Salvar dados de consignação se necessário
+                    if (dadosConsig) {
+                        const vidConsig = result.data?.id || veiculoEditando;
+                        dadosConsig.veiculo_id = vidConsig;
+                        await fetch(`${API_URL}/consignacoes`, {
+                            method: veiculoEditando ? 'PUT' : 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(dadosConsig)
+                        });
+                    }
                     if (imagensSelecionadas.length > 0) {
                         const veiculoIdParaUpload = result.data?.id || veiculoEditando;
                         mostrarProgresso(imagensSelecionadas.length);
@@ -1603,7 +1813,8 @@ const MARCAS_MODELOS = {
             const grid = document.getElementById('opcionaisGrid');
             if (!grid) return;
             const marcados = opcionaisStr ? opcionaisStr.split(',').map(s => s.trim()) : [];
-            grid.innerHTML = OPCIONAIS_DISPONIVEIS.map(op => `
+            const lista = getOpcionaisAtivos();
+            grid.innerHTML = lista.map(op => `
                 <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
                     <input type="checkbox"
                            value="${op}"
@@ -1659,6 +1870,81 @@ const MARCAS_MODELOS = {
             input.value = parseInt(v).toLocaleString('pt-BR');
         }
 
+        // ── Consignação ──
+        function atualizarOrigemVeiculo() {
+            const isConsig = document.getElementById('origemConsignado')?.checked;
+            const secao = document.getElementById('secaoConsignacao');
+            const campoCompra = document.getElementById('campoValorCompra');
+            const inputCompra = document.getElementById('valor_compra');
+            const labelCompra = campoCompra?.previousElementSibling;
+
+            if (secao) secao.style.display = isConsig ? 'block' : 'none';
+            if (campoCompra) campoCompra.style.display = isConsig ? 'none' : 'block';
+            if (inputCompra) inputCompra.required = !isConsig;
+
+            // Visual dos radio buttons
+            const lProp = document.getElementById('labelOrigProprio');
+            const lCons = document.getElementById('labelOrigConsig');
+            if (lProp) lProp.style.borderColor = isConsig ? 'rgba(255,255,255,0.1)' : 'var(--gold)';
+            if (lCons) lCons.style.borderColor = isConsig ? 'var(--gold)' : 'rgba(255,255,255,0.1)';
+        }
+
+        function atualizarLabelComissao() {
+            const tipo = document.getElementById('tipo_comissao')?.value;
+            const label = document.getElementById('labelValorComissao');
+            const prefix = document.getElementById('prefixComissao');
+            if (label) label.textContent = tipo === 'Fixo' ? 'Valor Fixo da Comissão (R$)*' : 'Comissão (%)*';
+            if (prefix) prefix.textContent = tipo === 'Fixo' ? 'R$' : '%';
+            calcularComissaoEstimada();
+        }
+
+        function calcularComissaoEstimada() {
+            const tipo = document.getElementById('tipo_comissao')?.value;
+            const valComissao = parseFloat((document.getElementById('valor_comissao')?.value || '0').replace(/[R$\s.]/g,'').replace(',','.')) || 0;
+            const valAnunciado = parseFloat((document.getElementById('valor_anunciado')?.value || '0').replace(/[R$\s.]/g,'').replace(',','.')) || 0;
+            let estimada = 0;
+            if (tipo === 'Percentual') {
+                estimada = valAnunciado * (valComissao / 100);
+            } else {
+                estimada = valComissao;
+            }
+            const el = document.getElementById('comissaoEstimada');
+            if (el) el.textContent = estimada > 0
+                ? estimada.toLocaleString('pt-BR', {style:'currency',currency:'BRL'})
+                : 'R$ —';
+        }
+
+        // Recalcular ao mudar valor anunciado ou comissão
+        document.addEventListener('input', e => {
+            if (e.target.id === 'valor_anunciado' || e.target.id === 'valor_comissao') {
+                calcularComissaoEstimada();
+            }
+        });
+
+        function setTipoRadio(val) {
+            document.getElementById('tipo').value = val;
+            const gold = 'var(--gold)', muted = 'var(--text-muted)', goldBg = 'rgba(201,168,76,0.08)';
+            const lC = document.getElementById('lblTipoCarro');
+            const lM = document.getElementById('lblTipoMoto');
+            if (!lC || !lM) return;
+            
+            // Helper para encontrar ícone (pode ser <i> ou <svg> após o Lucide rodar)
+            const getIcon = (el) => el.querySelector('i') || el.querySelector('svg');
+
+            if (val === 'Moto') {
+                lC.style.cssText = 'flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;transition:all 0.2s';
+                const iC = getIcon(lC); if(iC) iC.style.color = muted; lC.querySelector('span').style.color = muted;
+                lM.style.cssText = 'flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--gold);background:' + goldBg + ';cursor:pointer;transition:all 0.2s';
+                const iM = getIcon(lM); if(iM) iM.style.color = gold; lM.querySelector('span').style.color = 'var(--text)';
+            } else {
+                lC.style.cssText = 'flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--gold);background:' + goldBg + ';cursor:pointer;transition:all 0.2s';
+                const iC = getIcon(lC); if(iC) iC.style.color = gold; lC.querySelector('span').style.color = 'var(--text)';
+                lM.style.cssText = 'flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;transition:all 0.2s';
+                const iM = getIcon(lM); if(iM) iM.style.color = muted; lM.querySelector('span').style.color = muted;
+            }
+            atualizarTipoVeiculo();
+        }
+
         function atualizarTipoVeiculo() {
             // Quando tipo = Moto, câmbio tem opções diferentes
             const tipo = document.getElementById('tipo').value;
@@ -1677,6 +1963,13 @@ const MARCAS_MODELOS = {
                     <option value="Automatizado">Automatizado</option>
                     <option value="CVT">CVT</option>`;
             }
+            // Zerar cache e recarregar marcas FIPE para o tipo correto
+            _fipeMarcas = [];
+            document.getElementById('marca').innerHTML = '<option value="">Selecione a marca</option>';
+            document.getElementById('modelo').innerHTML = '<option value="">Selecione a marca primeiro</option>';
+            carregarMarcasFipe();
+            // Recarregar opcionais
+            popularOpcionais(document.getElementById('opcionais')?.value || '');
         }
 
         function mascaraPlaca(input) {
@@ -1687,26 +1980,36 @@ const MARCAS_MODELOS = {
 
         // ── FIPE API — Marcas e Modelos ──
         let _fipeMarcas = [];
+        let _fipeTipoAtual = 'carros';
+        const _fallbackMotos = [
+            {codigo:'89',nome:'Honda'},{codigo:'90',nome:'Yamaha'},{codigo:'91',nome:'Suzuki'},
+            {codigo:'92',nome:'Kawasaki'},{codigo:'93',nome:'Triumph'},{codigo:'94',nome:'BMW'},
+            {codigo:'95',nome:'Ducati'},{codigo:'96',nome:'Royal Enfield'},{codigo:'97',nome:'Harley-Davidson'},
+            {codigo:'98',nome:'KTM'},{codigo:'99',nome:'Shineray'},{codigo:'100',nome:'Dafra'},
+            {codigo:'101',nome:'Haojue'},{codigo:'102',nome:'Kasinski'},
+        ];
         async function carregarMarcasFipe() {
             const sel = document.getElementById('marca');
             const loading = document.getElementById('marcaLoading');
+            const tipo = document.getElementById('tipo') ? document.getElementById('tipo').value : 'Carro';
+            _fipeTipoAtual = tipo === 'Moto' ? 'motos' : 'carros';
             if (_fipeMarcas.length) { popularSelectMarcas(); return; }
             if (loading) loading.style.display = 'inline';
             try {
-                const r = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas');
+                const r = await fetch(`https://parallelum.com.br/fipe/api/v1/${_fipeTipoAtual}/marcas`);
                 _fipeMarcas = await r.json();
                 popularSelectMarcas();
             } catch(e) {
                 // fallback para lista local
-                _fipeMarcas = [
+                const fallbackCarros = [
                     {codigo:'21',nome:'Chevrolet'},{codigo:'22',nome:'Citroën'},{codigo:'23',nome:'Fiat'},
                     {codigo:'24',nome:'Ford'},{codigo:'25',nome:'Honda'},{codigo:'26',nome:'Hyundai'},
                     {codigo:'27',nome:'Jeep'},{codigo:'28',nome:'Kia'},{codigo:'29',nome:'Mercedes-Benz'},
                     {codigo:'30',nome:'Mitsubishi'},{codigo:'31',nome:'Nissan'},{codigo:'32',nome:'Peugeot'},
                     {codigo:'33',nome:'Renault'},{codigo:'34',nome:'Toyota'},{codigo:'35',nome:'Volkswagen'},
                     {codigo:'36',nome:'BMW'},{codigo:'37',nome:'Audi'},{codigo:'38',nome:'BYD'},
-                    {codigo:'39',nome:'Caoa Chery'},{codigo:'40',nome:'GWM'},
-                ].map(m => ({codigo: m.codigo, nome: m.nome}));
+                ];
+                _fipeMarcas = _fipeTipoAtual === 'motos' ? _fallbackMotos : fallbackCarros;
                 popularSelectMarcas();
             }
             if (loading) loading.style.display = 'none';
@@ -1728,7 +2031,7 @@ const MARCAS_MODELOS = {
             selModelo.innerHTML = '<option value="">Carregando modelos...</option>';
             if (!cod) { selModelo.innerHTML = '<option value="">Selecione a marca primeiro</option>'; return; }
             try {
-                const r = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${cod}/modelos`);
+                const r = await fetch(`https://parallelum.com.br/fipe/api/v1/${_fipeTipoAtual}/marcas/${cod}/modelos`);
                 const data = await r.json();
                 const modelos = data.modelos || [];
                 selModelo.innerHTML = '<option value="">Selecione o modelo</option>' +
