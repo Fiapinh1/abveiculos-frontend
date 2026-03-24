@@ -123,6 +123,9 @@
                 <div>
                     <h2 id="tituloVeiculo" style="font-size:1.8rem;font-weight:800;color:var(--text);margin-bottom:8px"></h2>
                     <div id="infoBasica" style="display:flex;flex-wrap:wrap;gap:8px;color:var(--text-muted);font-size:0.88rem"></div>
+                    <div id="bannerConsignado" style="display:none;margin-top:10px;align-items:center;gap:8px;padding:8px 14px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:10px;font-size:0.82rem;color:var(--gold)">
+                        <span id="bannerConsigText"></span>
+                    </div>
                 </div>
                 <div style="text-align:right">
                     <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em">Investimento Total</p>
@@ -143,44 +146,7 @@
 
             <!-- Tab Financeiro -->
             <div id="tab-financeiro" class="tab-content active">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="stat-fin">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(96,165,250,0.15);display:flex;align-items:center;justify-content:center">
-                                <i data-lucide="shopping-cart" style="width:16px;height:16px;color:#60a5fa"></i>
-                            </div>
-                            <span style="font-size:0.75rem;color:var(--text-muted)">Valor de Compra</span>
-                        </div>
-                        <p id="valorCompra" style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif"></p>
-                    </div>
-                    <div class="stat-fin">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(250,204,21,0.15);display:flex;align-items:center;justify-content:center">
-                                <i data-lucide="receipt" style="width:16px;height:16px;color:#facc15"></i>
-                            </div>
-                            <span style="font-size:0.75rem;color:var(--text-muted)">Custos Extras</span>
-                        </div>
-                        <p id="custosExtras" style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif"></p>
-                    </div>
-                    <div class="stat-fin">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(74,222,128,0.15);display:flex;align-items:center;justify-content:center">
-                                <i data-lucide="tag" style="width:16px;height:16px;color:#4ade80"></i>
-                            </div>
-                            <span style="font-size:0.75rem;color:var(--text-muted)">Valor Anunciado</span>
-                        </div>
-                        <p id="valorAnunciado" style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif"></p>
-                    </div>
-                    <div class="stat-fin">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-                            <div style="width:32px;height:32px;border-radius:8px;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center">
-                                <i data-lucide="trending-up" style="width:16px;height:16px;color:var(--gold)"></i>
-                            </div>
-                            <span style="font-size:0.75rem;color:var(--text-muted)">Lucro Projetado</span>
-                        </div>
-                        <p id="lucroProjetado" style="font-size:1.4rem;font-weight:700;font-family:'Syne',sans-serif"></p>
-                    </div>
-                </div>
+                <div id="cardsFin" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
@@ -358,7 +324,7 @@
 
     <script>
         const API_URL = 'https://loja-carros-backend.onrender.com/api';
-        let veiculo = null, clientes = [], chartInvestimento = null;
+        let veiculo = null, consig = null, clientes = [], chartInvestimento = null;
         let clienteSelecionadoId = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -377,6 +343,14 @@
                 const res = await r.json();
                 if (!res.success) throw new Error(res.error);
                 veiculo = res.data;
+                // Buscar dados de consignação se aplicável
+                if (veiculo.origem_veiculo === 'Consignado') {
+                    try {
+                        const rc = await fetch(`${API_URL}/consignacoes/${id}`);
+                        const rj = await rc.json();
+                        if (rj.success) consig = rj.data;
+                    } catch(e) { consig = null; }
+                }
                 renderizar();
             } catch(e) {
                 mostrarToast('Erro ao carregar veículo: ' + e.message, 'error');
@@ -394,6 +368,18 @@
 
         function renderizar() {
             document.getElementById('subtitulo').textContent = `${veiculo.marca} ${veiculo.modelo} ${veiculo.ano}`;
+            // Banner de consignação
+            const bannerEl = document.getElementById('bannerConsignado');
+            if (bannerEl) {
+                if (veiculo.origem_veiculo === 'Consignado' && consig) {
+                    bannerEl.style.display = 'flex';
+                    const prazo = consig.prazo_consignacao ? ' · Prazo: ' + formatarData(consig.prazo_consignacao) : '';
+                    bannerEl.querySelector('#bannerConsigText').textContent =
+                        `🤝 Consignado — ${consig.proprietario_nome}${prazo}`;
+                } else {
+                    bannerEl.style.display = 'none';
+                }
+            }
             document.getElementById('tituloVeiculo').textContent = `${veiculo.marca} ${veiculo.modelo}`;
             document.getElementById('infoBasica').innerHTML = [
                 veiculo.ano, `${formatarKm(veiculo.km)} km`, veiculo.cor, veiculo.cambio, veiculo.combustivel
@@ -418,29 +404,176 @@
         }
 
         function renderizarFinanceiro() {
-            document.getElementById('valorCompra').textContent = formatarMoeda(veiculo.valor_compra || 0);
-            document.getElementById('custosExtras').textContent = formatarMoeda(veiculo.custos_adicionais || 0);
-            document.getElementById('valorAnunciado').textContent = formatarMoeda(veiculo.valor_anunciado || 0);
+            const isConsig = veiculo.origem_veiculo === 'Consignado' && consig;
 
-            const lucro = (veiculo.valor_anunciado || 0) - (veiculo.investimento_real || veiculo.total_investido || (veiculo.valor_compra || 0) + (veiculo.custos_adicionais || 0));
-            const elLucro = document.getElementById('lucroProjetado');
-            elLucro.textContent = formatarMoeda(lucro);
-            elLucro.style.color = lucro >= 0 ? '#4ade80' : '#f87171';
+            if (isConsig) {
+                renderizarFinanceiroConsignado();
+            } else {
+                renderizarFinanceiroProprio();
+            }
+        }
 
-            // Gráfico
+        function renderizarFinanceiroProprio() {
+            document.getElementById('cardsFin').innerHTML = `
+                <div class="stat-fin">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(96,165,250,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="shopping-cart" style="width:16px;height:16px;color:#60a5fa"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Valor de Compra</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif">${formatarMoeda(veiculo.valor_compra || 0)}</p>
+                </div>
+                <div class="stat-fin">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(250,204,21,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="receipt" style="width:16px;height:16px;color:#facc15"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Custos Extras</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif">${formatarMoeda(veiculo.custos_adicionais || 0)}</p>
+                </div>
+                <div class="stat-fin">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(74,222,128,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="tag" style="width:16px;height:16px;color:#4ade80"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Valor Anunciado</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif">${formatarMoeda(veiculo.valor_anunciado || 0)}</p>
+                </div>
+                <div class="stat-fin">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="trending-up" style="width:16px;height:16px;color:var(--gold)"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Lucro Projetado</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;font-family:'Syne',sans-serif;color:${(veiculo.valor_anunciado||0)-(veiculo.valor_compra||0)-(veiculo.custos_adicionais||0)>=0?'#4ade80':'#f87171'}">${formatarMoeda((veiculo.valor_anunciado||0)-(veiculo.valor_compra||0)-(veiculo.custos_adicionais||0))}</p>
+                </div>`;
+
+            // Gráfico próprio
             Chart.defaults.color = '#8A91A8';
             Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
             if (chartInvestimento) chartInvestimento.destroy();
             chartInvestimento = new Chart(document.getElementById('graficoInvestimento'), {
                 type: 'doughnut',
-                data: {
-                    labels: ['Compra', 'Custos Adicionais'],
-                    datasets: [{ data: [veiculo.valor_compra || 0, veiculo.custos_adicionais || 0], backgroundColor: ['#60a5fa','#facc15'], borderColor: ['#3b82f6','#ca8a04'], borderWidth: 2 }]
-                },
+                data: { labels: ['Compra', 'Custos'], datasets: [{ data: [veiculo.valor_compra||0, veiculo.custos_adicionais||0], backgroundColor: ['#60a5fa','#facc15'], borderWidth: 2 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 16 } } }, cutout: '65%' }
             });
 
-            // Seção Venda
+            renderizarSecaoVendaProprio();
+            lucide.createIcons();
+        }
+
+        function renderizarFinanceiroConsignado() {
+            const c = consig;
+            const valAnunciado = veiculo.valor_anunciado || 0;
+            const custos = veiculo.custos_adicionais || 0;
+            let comissaoEstimada = 0;
+            if (c.tipo_comissao === 'Percentual') {
+                comissaoEstimada = valAnunciado * ((c.valor_comissao || 0) / 100);
+            } else {
+                comissaoEstimada = c.valor_comissao || 0;
+            }
+            const comissaoLiquida = comissaoEstimada - custos;
+            const repasseEstimado = valAnunciado - comissaoEstimada;
+
+            document.getElementById('cardsFin').innerHTML = `
+                <div class="stat-fin" style="border-color:rgba(201,168,76,0.2)">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="handshake" style="width:16px;height:16px;color:var(--gold)"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Combinado c/ Proprietário</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif">${formatarMoeda(c.valor_combinado || 0)}</p>
+                </div>
+                <div class="stat-fin">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(250,204,21,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="receipt" style="width:16px;height:16px;color:#facc15"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Custos da Loja</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif">${formatarMoeda(custos)}</p>
+                </div>
+                <div class="stat-fin">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(74,222,128,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="percent" style="width:16px;height:16px;color:#4ade80"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Comissão Estimada</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;color:#4ade80;font-family:'Syne',sans-serif">${formatarMoeda(comissaoEstimada)}</p>
+                    <p style="font-size:0.72rem;color:var(--text-muted);margin-top:2px">${c.tipo_comissao === 'Percentual' ? c.valor_comissao + '%' : 'Valor fixo'}</p>
+                </div>
+                <div class="stat-fin">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center">
+                            <i data-lucide="trending-up" style="width:16px;height:16px;color:var(--gold)"></i>
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Comissão Líquida</span>
+                    </div>
+                    <p style="font-size:1.4rem;font-weight:700;font-family:'Syne',sans-serif;color:${comissaoLiquida>=0?'var(--gold)':'#f87171'}">${formatarMoeda(comissaoLiquida)}</p>
+                </div>`;
+
+            // Gráfico consignado
+            Chart.defaults.color = '#8A91A8';
+            Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+            if (chartInvestimento) chartInvestimento.destroy();
+            chartInvestimento = new Chart(document.getElementById('graficoInvestimento'), {
+                type: 'doughnut',
+                data: { labels: ['Repasse Proprietário', 'Comissão Loja', 'Custos Loja'],
+                    datasets: [{ data: [repasseEstimado, comissaoEstimada - custos, custos],
+                        backgroundColor: ['#60a5fa','#C9A84C','#facc15'], borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 16 } } }, cutout: '65%' }
+            });
+
+            // Card proprietário + repasse
+            document.getElementById('secaoVenda').innerHTML = `
+                <div style="display:flex;flex-direction:column;gap:12px">
+                    <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:16px">
+                        <h3 style="font-weight:700;color:var(--gold);margin-bottom:12px;font-size:0.9rem">👤 Proprietário</h3>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                            ${[
+                                ['Nome', c.proprietario_nome || '—'],
+                                ['Telefone', c.proprietario_telefone || '—'],
+                                ['CPF/CNPJ', c.proprietario_cpf_cnpj || '—'],
+                                ['Prazo', c.prazo_consignacao ? formatarData(c.prazo_consignacao) : '—']
+                            ].map(([k,v]) => '<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:10px"><p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase">' + k + '</p><p style="font-weight:600;color:var(--text);font-size:0.85rem">' + v + '</p></div>').join('')}
+                        </div>
+                    </div>
+                    <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);border-radius:14px;padding:16px">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                            <h3 style="font-weight:700;color:#4ade80;font-size:0.9rem">💸 Repasse</h3>
+                            <span style="padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;background:${c.status_repasse==='Pago'?'rgba(74,222,128,0.15)':'rgba(250,204,21,0.15)'};color:${c.status_repasse==='Pago'?'#4ade80':'#facc15'}">${c.status_repasse || 'Pendente'}</span>
+                        </div>
+                        <p style="font-size:1.3rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif;margin-bottom:8px">${formatarMoeda(repasseEstimado)}</p>
+                        <p style="font-size:0.75rem;color:var(--text-muted)">Estimado com base no valor anunciado</p>
+                        ${veiculo.status !== 'Vendido' ? '<button onclick="abrirModalVenda()" class="btn-green" style="width:100%;margin-top:12px;font-size:0.88rem;padding:10px;display:flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="check-circle" style="width:16px;height:16px"></i> Registrar Venda</button>' : ''}
+                        ${veiculo.status === 'Vendido' && c.status_repasse !== 'Pago' ? '<button onclick="marcarRepassePago()" class="btn-gold" style="width:100%;margin-top:8px;font-size:0.82rem;padding:10px;display:flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="check" style="width:14px;height:14px"></i> Marcar Repasse como Pago</button>' : ''}
+                    </div>
+                </div>`;
+
+            lucide.createIcons();
+        }
+
+        async function marcarRepassePago() {
+            if (!consig) return;
+            try {
+                const r = await fetch(`${API_URL}/consignacoes/${veiculo.id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ status_repasse: 'Pago', data_repasse: new Date().toISOString().split('T')[0] })
+                });
+                const res = await r.json();
+                if (res.success) { mostrarToast('Repasse marcado como pago!'); consig.status_repasse = 'Pago'; renderizarFinanceiro(); }
+                else mostrarToast('Erro: ' + res.error, 'error');
+            } catch(e) { mostrarToast('Erro ao atualizar repasse', 'error'); }
+        }
+
+        function renderizarSecaoVendaProprio() {
             if (veiculo.status === 'Vendido') {
                 document.getElementById('secaoVenda').innerHTML = `
                     <div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:14px;padding:20px">
@@ -456,7 +589,7 @@
                                 ['Forma', veiculo.forma_pagamento || '—'],
                                 ['Data', formatarData(veiculo.data_venda)],
                                 ['Lucro Bruto', formatarMoeda(veiculo.lucro_bruto || 0)]
-                            ].map(([k,v]) => `<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px"><p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">${k}</p><p style="font-weight:600;color:var(--text)">${v}</p></div>`).join('')}
+                            ].map(([k,v]) => '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px"><p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">' + k + '</p><p style="font-weight:600;color:var(--text)">' + v + '</p></div>').join('')}
                         </div>
                     </div>`;
             } else {
@@ -470,7 +603,6 @@
                         </button>
                     </div>`;
             }
-            lucide.createIcons();
         }
 
         function renderizarDespesas() {
