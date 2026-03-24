@@ -6,70 +6,137 @@
     <title>Painel Administrativo - Sistema de Gestão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        * { font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-                .sidebar { transition: transform 0.3s ease; height: 100vh; position: fixed; top: 0; left: 0; width: 256px; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 1000; transform: translateX(0); }
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
-        .sidebar-overlay.active { display: block; }
-                @media (max-width: 1024px) { 
-            .sidebar { 
-                transform: translateX(-100%) !important;
-            }
-            .sidebar.open { 
-                transform: translateX(0) !important;
-            }
-            .main-content {
-                margin-left: 0 !important;
-            }
+        :root{--gold:#C9A84C;--gold-light:#e8c97a;--dark:#0D0F14;--dark-2:#161920;--dark-3:#1E2230;--dark-4:#252A3A;--text:#F0F2F8;--text-muted:#8A91A8;}
+        *{font-family:'Outfit',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+        h1,h2,h3,th{font-family:'Syne',sans-serif;}
+        body{background:var(--dark);color:var(--text);}
+        ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--dark-2)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideIn{from{transform:translateX(400px)}to{transform:translateX(0)}}
+
+        /* Sidebar */
+        .sidebar{transition:transform 0.3s ease;height:100vh;position:fixed;top:0;left:0;width:256px;background:var(--dark-2);border-right:1px solid rgba(201,168,76,0.1);z-index:1000;transform:translateX(0);}
+        .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;display:none;}
+        .sidebar-header{background:linear-gradient(135deg,#161920,#1E2230);border-bottom:1px solid rgba(201,168,76,0.1);padding:24px;}
+        .menu-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;cursor:pointer;transition:all 0.2s;color:var(--text-muted);font-weight:500;font-size:0.9rem;margin:2px 8px;}
+        .menu-item:hover{background:rgba(201,168,76,0.08);color:var(--text);}
+        .menu-item.active{background:rgba(201,168,76,0.12);color:var(--gold);font-weight:600;}
+        .menu-item i{width:18px;height:18px;}
+
+        /* Main */
+        main{margin-left:256px;background:var(--dark);min-height:100vh;}
+        .main-header{background:var(--dark-2);border-bottom:1px solid rgba(255,255,255,0.06);padding:16px 24px;display:flex;align-items:center;justify-content:between;position:sticky;top:0;z-index:50;}
+
+        /* Tab system */
+        .tab-content{display:none;}
+        .tab-content.active{display:block;animation:fadeIn 0.3s ease;}
+
+        /* Cards de stat */
+        .stat-card{background:var(--dark-2);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;transition:all 0.25s;}
+        .stat-card:hover{border-color:rgba(201,168,76,0.2);transform:translateY(-2px);}
+        .stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+
+        /* Cards gerais */
+        .card{background:var(--dark-2);border:1px solid rgba(255,255,255,0.07);border-radius:16px;}
+
+        /* Inputs */
+        input,select,textarea{background:var(--dark-3) !important;border:1.5px solid rgba(255,255,255,0.08) !important;color:var(--text) !important;border-radius:10px;}
+        input::placeholder,textarea::placeholder{color:var(--text-muted) !important;}
+        input:focus,select:focus,textarea:focus{outline:none !important;border-color:var(--gold) !important;box-shadow:0 0 0 3px rgba(201,168,76,0.1) !important;}
+        select option{background:var(--dark-3);color:var(--text);}
+        label{color:var(--text-muted);}
+
+        /* Dropzone */
+        .dropzone{border:2px dashed rgba(255,255,255,0.12);transition:all 0.3s ease;cursor:pointer;background:var(--dark-3);border-radius:12px;}
+        .dropzone.dragover{border-color:var(--gold);background:rgba(201,168,76,0.05);transform:scale(1.01);}
+        .preview-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;}
+
+        /* Buttons */
+        .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#0D0F14;font-weight:700;font-family:'Syne',sans-serif;border-radius:10px;transition:all 0.25s;border:none;cursor:pointer;}
+        .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,0.35);}
+        .btn-outline{border:1.5px solid rgba(255,255,255,0.1);color:var(--text-muted);background:transparent;border-radius:10px;transition:all 0.2s;cursor:pointer;}
+        .btn-outline:hover{border-color:rgba(201,168,76,0.3);color:var(--text);}
+        .btn-danger{border:1.5px solid rgba(239,68,68,0.25);color:#f87171;background:transparent;border-radius:10px;transition:all 0.2s;cursor:pointer;}
+        .btn-danger:hover{background:rgba(239,68,68,0.1);}
+
+        /* Modals */
+        .modal-overlay{backdrop-filter:blur(4px);}
+        .modal-overlay:not(.hidden){display:flex !important;}
+        .modal-card{background:var(--dark-2);border:1px solid rgba(255,255,255,0.08);border-radius:20px;}
+
+        /* Toast */
+        .toast{position:fixed;bottom:24px;right:24px;z-index:9999;animation:slideIn 0.3s ease;min-width:300px;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;font-size:0.9rem;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+
+        /* Tables */
+        table{width:100%;border-collapse:collapse;}
+        th{background:var(--dark-3);color:var(--text-muted);font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;padding:12px 16px;text-align:left;}
+        td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text);}
+        tr:hover td{background:rgba(255,255,255,0.02);}
+
+        /* Badge status */
+        .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;}
+        .badge-green{background:rgba(34,197,94,0.12);color:#4ade80;}
+        .badge-blue{background:rgba(59,130,246,0.12);color:#60a5fa;}
+        .badge-yellow{background:rgba(234,179,8,0.12);color:#facc15;}
+        .badge-gold{background:rgba(201,168,76,0.12);color:var(--gold);}
+
+        .main-content{flex:1;overflow:auto;display:flex;flex-direction:column;min-height:100vh;}
+        .main-content > main{flex:1;padding:24px;}
+        @media(max-width:1024px){
+            .sidebar{transform:translateX(-100%);}
+            .sidebar.open{transform:translateX(0);}
+            main{margin-left:0;}
         }
-        .main-content { margin-left: 256px; min-height: 100vh; }
-        @media (max-width: 1024px) { .main-content { margin-left: 0; } }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 9999; animation: slideIn 0.3s ease; min-width: 300px; }
-        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
-        .dropzone { border: 2px dashed #cbd5e0; transition: all 0.3s ease; cursor: pointer; background: #f7fafc; }
-        .dropzone.dragover { border-color: #667eea; background: #edf2f7; transform: scale(1.02); }
-        .preview-img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; }
-        .menu-item.active { background: #f3f4f6; color: #667eea; font-weight: 600; }
-        .modal-overlay { backdrop-filter: blur(2px); }
     </style>
 </head>
-<body class="bg-gray-50">
+<body style="display:flex;background:var(--dark)">
     <aside id="sidebar" class="sidebar">
         <div class="h-full flex flex-col">
-            <div class="gradient-bg p-6 text-white">
-                <div class="flex items-center space-x-3">
-                    <i data-lucide="car" class="w-8 h-8"></i>
-                    <div>
-                        <h1 class="text-xl font-bold" id="nomeLoja">Alysson Bruno</h1>
-                        <p class="text-xs opacity-90">Painel Admin</p>
+            <div class="sidebar-header">
+                <div class="flex items-center gap-3">
+                    <img src="logo_empresa.png" alt="Logo" style="height:40px;width:auto;object-fit:contain"
+                         onerror="this.style.display='none'; document.getElementById('sidebarLogoFallback').style.display='flex'">
+                    <div id="sidebarLogoFallback" style="display:none;align-items:center;gap:10px">
+                        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold-light));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i data-lucide="car" style="width:20px;height:20px;color:#0D0F14"></i>
+                        </div>
+                        <div>
+                            <h1 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--text)" id="nomeLoja">AB Veículos</h1>
+                            <p style="font-size:0.7rem;color:var(--text-muted);letter-spacing:0.08em">PAINEL ADMIN</p>
+                        </div>
                     </div>
                 </div>
             </div>
             <nav class="flex-1 p-4 overflow-y-auto">
-                <button onclick="mostrarAba('dashboard')" class="menu-item active w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="dashboard">
+                <button onclick="mostrarAba('dashboard')" class="menu-item active w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition text-left mb-2" data-tab="dashboard">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Dashboard</span>
                 </button>
-                <button onclick="mostrarAba('veiculos')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="veiculos">
+                <button onclick="mostrarAba('veiculos')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition text-left mb-2" data-tab="veiculos">
                     <i data-lucide="car-front" class="w-5 h-5"></i><span>Veículos</span>
                 </button>
-                <button onclick="mostrarAba('leads')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="leads">
+                <button onclick="mostrarAba('leads')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition text-left mb-2" data-tab="leads">
                     <i data-lucide="users" class="w-5 h-5"></i><span>Leads</span>
                 </button>
-                <button onclick="mostrarAba('despesas')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="despesas">
+                <button onclick="mostrarAba('despesas')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition text-left mb-2" data-tab="despesas">
                     <i data-lucide="receipt" class="w-5 h-5"></i><span>Despesas</span>
                 </button>
             </nav>
-            <div class="p-4 border-t">
-                <button onclick="mostrarAba('clientes')" class="menu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition text-left mb-2" data-tab="clientes">
-                    <i data-lucide="users" class="w-5 h-5"></i><span>Clientes</span>
+            <div style="padding:12px 8px;border-top:1px solid rgba(255,255,255,0.06)">
+                <button onclick="mostrarAba('clientes')" class="menu-item w-full mb-1" data-tab="clientes"
+                    style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;cursor:pointer;transition:all 0.2s;background:transparent;border:none;width:100%;text-align:left">
+                    <i data-lucide="user-round" style="width:18px;height:18px;flex-shrink:0;color:var(--text-muted)"></i>
+                    <span style="font-size:0.9rem;font-weight:500;color:var(--text-muted)">Clientes</span>
                 </button>
-                <button onclick="sair()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 transition">
-                    <i data-lucide="log-out" class="w-5 h-5"></i><span>Sair</span>
+                <button onclick="sair()"
+                    style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;cursor:pointer;transition:all 0.2s;background:transparent;border:none;width:100%;text-align:left;color:#f87171"
+                    onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'">
+                    <i data-lucide="log-out" style="width:18px;height:18px;flex-shrink:0;color:#f87171"></i>
+                    <span style="font-size:0.9rem;font-weight:500">Sair</span>
                 </button>
             </div>
         </div>
@@ -78,16 +145,16 @@
     <!-- Overlay do menu mobile -->
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-    <div class="main-content">
-        <header class="bg-white shadow-sm sticky top-0 z-30">
+    <div class="main-content" style="flex:1;overflow:auto;background:var(--dark);display:flex;flex-direction:column">
+        <header style="background:var(--dark-2);border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:0;z-index:30">
             <div class="px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition">
-                        <i data-lucide="menu" class="w-6 h-6 text-gray-700"></i>
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg transition" style="background:var(--dark-3);color:var(--text-muted)">
+                        <i data-lucide="menu" class="w-6 h-6 text-slate-200"></i>
                     </button>
-                    <h2 id="tituloAba" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                    <h2 id="tituloAba" class="text-2xl font-bold text-white">Dashboard</h2>
                 </div>
-                <button onclick="carregarDados()" class="p-2 hover:bg-gray-100 rounded-lg transition" title="Atualizar dados">
+                <button onclick="carregarDados()" class="p-2 rounded-lg transition" style="background:var(--dark-3);color:var(--text-muted)" title="Atualizar dados">
                     <i data-lucide="refresh-cw" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -95,43 +162,73 @@
 
         <main class="p-6">
             <div id="tab-dashboard" class="tab-content active">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-blue-100 p-3 rounded-lg"><i data-lucide="car" class="w-6 h-6 text-blue-600"></i></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="stat-icon" style="background:rgba(96,165,250,0.12)">
+                                <i data-lucide="car" class="w-5 h-5" style="color:#60a5fa"></i>
+                            </div>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full" style="background:rgba(96,165,250,0.1);color:#60a5fa">Estoque</span>
                         </div>
-                        <p class="text-3xl font-bold text-gray-800" id="statEstoque">0</p>
-                        <p class="text-sm text-gray-600 mt-1">Em Estoque</p>
+                        <p class="text-3xl font-bold" id="statEstoque" style="font-family:'Syne',sans-serif;color:var(--text)">0</p>
+                        <p class="text-sm mt-1" style="color:var(--text-muted)">Veículos disponíveis</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-green-100 p-3 rounded-lg"><i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i></div>
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="stat-icon" style="background:rgba(74,222,128,0.12)">
+                                <i data-lucide="check-circle" class="w-5 h-5" style="color:#4ade80"></i>
+                            </div>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full" style="background:rgba(74,222,128,0.1);color:#4ade80">Vendas</span>
                         </div>
-                        <p class="text-3xl font-bold text-gray-800" id="statVendidos">0</p>
-                        <p class="text-sm text-gray-600 mt-1">Vendidos</p>
+                        <p class="text-3xl font-bold" id="statVendidos" style="font-family:'Syne',sans-serif;color:var(--text)">0</p>
+                        <p class="text-sm mt-1" style="color:var(--text-muted)">Vendidos no total</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-purple-100 p-3 rounded-lg"><i data-lucide="dollar-sign" class="w-6 h-6 text-purple-600"></i></div>
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="stat-icon" style="background:rgba(201,168,76,0.12)">
+                                <i data-lucide="trending-up" class="w-5 h-5" style="color:var(--gold)"></i>
+                            </div>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full" style="background:rgba(201,168,76,0.1);color:var(--gold)">Lucro</span>
                         </div>
-                        <p class="text-3xl font-bold text-gray-800" id="statLucro">R$ 0</p>
-                        <p class="text-sm text-gray-600 mt-1">Lucro Total</p>
+                        <p class="text-2xl font-bold" id="statLucro" style="font-family:'Syne',sans-serif;color:var(--text)">R$ 0</p>
+                        <p class="text-sm mt-1" style="color:var(--text-muted)">Lucro acumulado</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-yellow-100 p-3 rounded-lg"><i data-lucide="users" class="w-6 h-6 text-yellow-600"></i></div>
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="stat-icon" style="background:rgba(250,204,21,0.12)">
+                                <i data-lucide="bell" class="w-5 h-5" style="color:#facc15"></i>
+                            </div>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full" style="background:rgba(250,204,21,0.1);color:#facc15">Leads</span>
                         </div>
-                        <p class="text-3xl font-bold text-gray-800" id="statLeads">0</p>
-                        <p class="text-sm text-gray-600 mt-1">Leads Recebidos</p>
+                        <p class="text-3xl font-bold" id="statLeads" style="font-family:'Syne',sans-serif;color:var(--text)">0</p>
+                        <p class="text-sm mt-1" style="color:var(--text-muted)">Contatos recebidos</p>
                     </div>
+                </div>
+
+                <!-- Gráficos -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="card p-6">
+                        <h3 class="text-base font-bold mb-4" style="font-family:'Syne',sans-serif;color:var(--text)">Vendas por Mês</h3>
+                        <canvas id="graficoVendas" height="200"></canvas>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-base font-bold mb-4" style="font-family:'Syne',sans-serif;color:var(--text)">Veículos por Status</h3>
+                        <canvas id="graficoStatus" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Veículos Parados -->
+                <div class="card p-6 mt-6">
+                    <h3 class="text-base font-bold mb-4" style="font-family:'Syne',sans-serif;color:var(--text)">⚠️ Veículos há mais de 60 dias no estoque</h3>
+                    <div id="listaParados" style="color:var(--text-muted);font-size:0.9rem">Carregando...</div>
                 </div>
             </div>
 
             <div id="tab-veiculos" class="tab-content">
-                <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="card p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">Gerenciar Veículos</h3>
-                        <button onclick="abrirModalVeiculo()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
+                        <h3 class="text-xl font-bold text-white">Gerenciar Veículos</h3>
+                        <button onclick="abrirModalVeiculo()" class="btn-gold text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
                             <i data-lucide="plus" class="w-5 h-5 mr-2"></i>Adicionar Veículo
                         </button>
                     </div>
@@ -140,17 +237,17 @@
             </div>
 
             <div id="tab-leads" class="tab-content">
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-6">Gerenciar Leads</h3>
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Gerenciar Leads</h3>
                     <div id="listaLeads" class="space-y-4"></div>
                 </div>
             </div>
 
             <div id="tab-despesas" class="tab-content">
-                <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="card p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">Gerenciar Despesas</h3>
-                        <button onclick="abrirModalDespesa()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
+                        <h3 class="text-xl font-bold text-white">Gerenciar Despesas</h3>
+                        <button onclick="abrirModalDespesa()" class="btn-gold text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
                             <i data-lucide="plus" class="w-5 h-5 mr-2"></i>Adicionar Despesa
                         </button>
                     </div>
@@ -159,10 +256,10 @@
             </div>
 
             <div id="tab-clientes" class="tab-content">
-                <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="card p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">Clientes Cadastrados</h3>
-                        <button onclick="abrirModalCliente()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
+                        <h3 class="text-xl font-bold text-white">Clientes Cadastrados</h3>
+                        <button onclick="abrirModalCliente()" class="btn-gold text-white px-6 py-3 rounded-lg transition flex items-center shadow-md">
                             <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>Adicionar Cliente
                         </button>
                     </div>
@@ -171,25 +268,25 @@
             </div>
 
             <div id="tab-detalhes" class="tab-content">
-                <div class="bg-white rounded-xl shadow-lg">
+                <div class="card">
                     <!-- Header -->
                     <div class="flex items-center gap-4 p-6 border-b">
-                        <button onclick="fecharDetalhes()" class="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition font-medium">
+                        <button onclick="fecharDetalhes()" class="flex items-center gap-2 text-gray-500 hover:text-white transition font-medium">
                             <i data-lucide="arrow-left" class="w-5 h-5"></i> Voltar
                         </button>
                         <div>
-                            <h2 id="det_titulo" class="text-2xl font-bold text-gray-800"></h2>
-                            <p id="det_subtitulo" class="text-gray-500 text-sm"></p>
+                            <h2 id="det_titulo" class="text-2xl font-bold text-white"></h2>
+                            <p id="det_subtitulo" style="color:var(--text-muted)" class=" text-sm"></p>
                         </div>
                         <div class="ml-auto flex gap-2">
-                            <button id="det_btnEditar" onclick="" class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium">
+                            <button id="det_btnEditar" onclick="" class="flex items-center gap-2 px-4 py-2 btn-gold text-dark rounded-lg hover:bg-purple-700 transition text-sm font-medium">
                                 <i data-lucide="edit" class="w-4 h-4"></i> Editar
                             </button>
                         </div>
                     </div>
 
                     <div id="det_loading" class="flex items-center justify-center py-20">
-                        <i data-lucide="loader-2" class="w-10 h-10 text-purple-600 animate-spin"></i>
+                        <i data-lucide="loader-2" class="w-10 h-10  animate-spin" style="color:var(--gold)"></i>
                     </div>
 
                     <div id="det_conteudo" class="hidden p-6 space-y-8">
@@ -206,52 +303,52 @@
                             <!-- Dados principais -->
                             <div class="space-y-4">
                                 <div class="grid grid-cols-2 gap-3">
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div style="background:var(--dark-3)" class="rounded-lg p-3">
                                         <p class="text-xs text-gray-400">Ano</p>
-                                        <p id="det_ano" class="font-semibold text-gray-800"></p>
+                                        <p id="det_ano" class="font-semibold text-white"></p>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div style="background:var(--dark-3)" class="rounded-lg p-3">
                                         <p class="text-xs text-gray-400">KM</p>
-                                        <p id="det_km" class="font-semibold text-gray-800"></p>
+                                        <p id="det_km" class="font-semibold text-white"></p>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div style="background:var(--dark-3)" class="rounded-lg p-3">
                                         <p class="text-xs text-gray-400">Cor</p>
-                                        <p id="det_cor" class="font-semibold text-gray-800"></p>
+                                        <p id="det_cor" class="font-semibold text-white"></p>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div style="background:var(--dark-3)" class="rounded-lg p-3">
                                         <p class="text-xs text-gray-400">Placa</p>
-                                        <p id="det_placa" class="font-semibold text-gray-800"></p>
+                                        <p id="det_placa" class="font-semibold text-white"></p>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div style="background:var(--dark-3)" class="rounded-lg p-3">
                                         <p class="text-xs text-gray-400">Câmbio</p>
-                                        <p id="det_cambio" class="font-semibold text-gray-800"></p>
+                                        <p id="det_cambio" class="font-semibold text-white"></p>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div style="background:var(--dark-3)" class="rounded-lg p-3">
                                         <p class="text-xs text-gray-400">Combustível</p>
-                                        <p id="det_combustivel" class="font-semibold text-gray-800"></p>
+                                        <p id="det_combustivel" class="font-semibold text-white"></p>
                                     </div>
                                 </div>
                                 <!-- Financeiro -->
-                                <div class="border border-gray-200 rounded-xl p-4 space-y-2">
-                                    <h4 class="font-semibold text-gray-700 mb-3">Financeiro</h4>
+                                <div class="border  rounded-xl p-4 space-y-2" style="border-color:rgba(255,255,255,0.07)">
+                                    <h4 class="font-semibold text-slate-200 mb-3">Financeiro</h4>
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-500">Valor de Compra</span>
-                                        <span id="det_compra" class="font-medium text-gray-800"></span>
+                                        <span style="color:var(--text-muted)" class="">Valor de Compra</span>
+                                        <span id="det_compra" class="font-medium text-white"></span>
                                     </div>
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-500">Custos Adicionais</span>
-                                        <span id="det_custos" class="font-medium text-gray-800"></span>
+                                        <span style="color:var(--text-muted)" class="">Custos Adicionais</span>
+                                        <span id="det_custos" class="font-medium text-white"></span>
                                     </div>
                                     <div class="flex justify-between text-sm border-t pt-2 mt-2">
-                                        <span class="text-gray-500">Investimento Total</span>
-                                        <span id="det_investimento" class="font-medium text-gray-800"></span>
+                                        <span style="color:var(--text-muted)" class="">Investimento Total</span>
+                                        <span id="det_investimento" class="font-medium text-white"></span>
                                     </div>
                                     <div class="flex justify-between text-sm font-semibold text-lg pt-1">
-                                        <span class="text-gray-700">Valor Anunciado</span>
-                                        <span id="det_anunciado" class="text-purple-600"></span>
+                                        <span class="text-slate-200">Valor Anunciado</span>
+                                        <span id="det_anunciado" class="" style="color:var(--gold)"></span>
                                     </div>
                                     <div class="flex justify-between text-sm border-t pt-2">
-                                        <span class="text-gray-500">Lucro Estimado</span>
+                                        <span style="color:var(--text-muted)" class="">Lucro Estimado</span>
                                         <span id="det_lucro" class="font-semibold"></span>
                                     </div>
                                 </div>
@@ -264,19 +361,19 @@
 
                         <!-- Opcionais -->
                         <div id="det_secaoOpcionais" class="hidden">
-                            <h3 class="text-lg font-bold text-gray-800 mb-3">Opcionais</h3>
+                            <h3 class="text-lg font-bold text-white mb-3">Opcionais</h3>
                             <div id="det_opcionais" class="flex flex-wrap gap-2"></div>
                         </div>
 
                         <!-- Descrição -->
                         <div id="det_secaoDescricao" class="hidden">
-                            <h3 class="text-lg font-bold text-gray-800 mb-3">Descrição</h3>
-                            <p id="det_descricao" class="text-gray-600 leading-relaxed"></p>
+                            <h3 class="text-lg font-bold text-white mb-3">Descrição</h3>
+                            <p id="det_descricao" style="color:var(--text-muted)" class=" leading-relaxed"></p>
                         </div>
 
                         <!-- Fotos extras -->
                         <div id="det_secaoFotos" class="hidden">
-                            <h3 class="text-lg font-bold text-gray-800 mb-3">Galeria de Fotos</h3>
+                            <h3 class="text-lg font-bold text-white mb-3">Galeria de Fotos</h3>
                             <div id="det_galeria" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
                         </div>
                     </div>
@@ -288,87 +385,199 @@
 
 
     <!-- Modal Progresso Upload -->
-    <div id="modalProgresso" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+    <div id="modalProgresso" class="hidden fixed inset-0 z-[60] modal-overlay" style="background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
             <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="upload-cloud" class="w-8 h-8 text-purple-600"></i>
+                <i data-lucide="upload-cloud" class="w-8 h-8 " style="color:var(--gold)"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-1">Enviando fotos...</h3>
+            <h3 class="text-xl font-bold text-white mb-1">Enviando fotos...</h3>
             <p id="progressoTexto" class="text-sm text-gray-500 mb-5">0 de 0</p>
             <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-2">
                 <div id="progressoBarra" class="bg-purple-600 h-4 rounded-full transition-all duration-300" style="width:0%"></div>
             </div>
-            <p id="progressoPct" class="text-sm font-semibold text-purple-600 mt-2">0%</p>
+            <p id="progressoPct" class="text-sm font-semibold  mt-2" style="color:var(--gold)">0%</p>
         </div>
     </div>
 
     <!-- Modal Confirmação Personalizado -->
-    <div id="modalConfirm" class="hidden fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
+    <div id="modalConfirm" class="hidden fixed inset-0 z-[70] modal-overlay" style="background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
             <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i data-lucide="alert-triangle" class="w-7 h-7 text-red-500"></i>
             </div>
-            <h3 id="confirmTitulo" class="text-xl font-bold text-gray-800 mb-2">Confirmar</h3>
-            <p id="confirmMensagem" class="text-gray-500 text-sm mb-6">Tem certeza?</p>
+            <h3 id="confirmTitulo" class="text-xl font-bold text-white mb-2">Confirmar</h3>
+            <p id="confirmMensagem" style="color:var(--text-muted)" class=" text-sm mb-6">Tem certeza?</p>
             <div class="flex gap-3 justify-center">
-                <button onclick="fecharConfirm(false)" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition">Cancelar</button>
+                <button onclick="fecharConfirm(false)" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium text-slate-200 hover:bg-gray-50 transition">Cancelar</button>
                 <button id="confirmBtnOk" onclick="fecharConfirm(true)" class="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition">Confirmar</button>
             </div>
         </div>
     </div>
 
-    <div id="modalVeiculo" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay">
-        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-                <h3 class="text-2xl font-bold text-gray-800" id="modalVeiculoTitulo">Adicionar Veículo</h3>
-                <button onclick="fecharModalVeiculo()" class="p-2 hover:bg-gray-100 rounded-lg transition">
-                    <i data-lucide="x" class="w-6 h-6"></i>
+    <div id="modalVeiculo" class="hidden fixed inset-0 z-50 modal-overlay" style="background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px">
+        <div class="modal-card" style="max-width:896px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
+            <div style="padding:24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;background:var(--dark-2);border-radius:20px 20px 0 0">
+                <h3 class="text-2xl font-bold text-white" id="modalVeiculoTitulo">Adicionar Veículo</h3>
+                <button onclick="fecharModalVeiculo()" style="padding:8px;border-radius:8px;cursor:pointer;background:transparent;border:none;transition:all 0.2s;color:var(--text-muted)" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
+                    <i data-lucide="x" style="width:20px;height:20px"></i>
                 </button>
             </div>
-            <div class="p-6">
+            <div style="padding:24px">
                 <form id="formVeiculo" onsubmit="salvarVeiculo(event)" class="space-y-6">
                     <input type="hidden" id="veiculoId">
                     <input type="hidden" id="veiculoPastaId">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Marca*</label>
-                            <input type="text" id="marca" list="listaMarcas" required 
-                                   onchange="atualizarModelos()" 
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
-                            <datalist id="listaMarcas"></datalist>
+
+                        <!-- MARCA -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Marca*</label>
+                            <select id="marca" required onchange="carregarModelosFipe()" class="w-full">
+                                <option value="">Selecione a marca</option>
+                            </select>
+                            <span id="marcaLoading" style="display:none;font-size:0.75rem;color:var(--text-muted);margin-top:4px">Carregando marcas...</span>
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Modelo*</label>
-                            <input type="text" id="modelo" list="listaModelos" required 
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
-                            <datalist id="listaModelos"></datalist>
+
+                        <!-- MODELO -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Modelo*</label>
+                            <select id="modelo" required class="w-full">
+                                <option value="">Selecione a marca primeiro</option>
+                            </select>
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Ano*</label>
-                            <input type="number" id="ano" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">KM*</label>
-                            <input type="number" id="km" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Cor*</label>
-                            <input type="text" id="cor" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Placa</label>
-                            <input type="text" id="placa" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Câmbio*</label>
-                            <select id="cambio" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
-                                <option value="">Selecione</option><option value="Manual">Manual</option><option value="Automático">Automático</option>
-                            </select></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Combustível*</label>
-                            <select id="combustivel" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
-                                <option value="">Selecione</option><option value="Flex">Flex</option><option value="Gasolina">Gasolina</option><option value="Diesel">Diesel</option><option value="Elétrico">Elétrico</option>
-                            </select></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Valor Compra*</label>
-                            <input type="number" id="valor_compra" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Custos Adicionais</label>
-                            <input type="number" id="custos_adicionais" value="0" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Valor Anunciado*</label>
-                            <input type="number" id="valor_anunciado" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Status*</label>
-                            <select id="status" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
-                                <option value="Disponível">Disponível</option><option value="Vendido">Vendido</option><option value="Reservado">Reservado</option>
-                            </select></div>
+
+                        <!-- TIPO -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Tipo*</label>
+                            <select id="tipo" required class="w-full" onchange="atualizarTipoVeiculo()">
+                                <option value="Carro">🚗 Carro</option>
+                                <option value="Moto">🏍️ Moto</option>
+                            </select>
+                        </div>
+
+                        <!-- ANO FABRICAÇÃO -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Ano Fabricação*</label>
+                            <input type="number" id="ano" required min="1950" max="2030" placeholder="Ex: 2022" class="w-full">
+                        </div>
+
+                        <!-- ANO MODELO -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Ano Modelo</label>
+                            <input type="number" id="ano_modelo" min="1950" max="2031" placeholder="Ex: 2023" class="w-full">
+                        </div>
+
+                        <!-- KM -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Quilometragem*</label>
+                            <input type="text" id="km" required placeholder="Ex: 54.000" oninput="mascaraKm(this)" class="w-full">
+                        </div>
+
+                        <!-- COR -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Cor*</label>
+                            <select id="cor" required class="w-full">
+                                <option value="">Selecione a cor</option>
+                                <option value="Branco">⬜ Branco</option>
+                                <option value="Prata">🔘 Prata</option>
+                                <option value="Preto">⬛ Preto</option>
+                                <option value="Cinza">🩶 Cinza</option>
+                                <option value="Vermelho">🟥 Vermelho</option>
+                                <option value="Azul">🟦 Azul</option>
+                                <option value="Azul Escuro">🔵 Azul Escuro</option>
+                                <option value="Verde">🟩 Verde</option>
+                                <option value="Amarelo">🟨 Amarelo</option>
+                                <option value="Laranja">🟧 Laranja</option>
+                                <option value="Marrom">🟫 Marrom</option>
+                                <option value="Bege">🟤 Bege</option>
+                                <option value="Vinho">🍷 Vinho</option>
+                                <option value="Rosa">🌸 Rosa</option>
+                                <option value="Champagne">✨ Champagne</option>
+                                <option value="Dourado">🥇 Dourado</option>
+                                <option value="Grafite">⚫ Grafite</option>
+                                <option value="Outra">🎨 Outra</option>
+                            </select>
+                        </div>
+
+                        <!-- PLACA -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Placa</label>
+                            <input type="text" id="placa" placeholder="AAA-0000 ou AAA0A00" maxlength="8" oninput="mascaraPlaca(this)" style="text-transform:uppercase" class="w-full">
+                        </div>
+
+                        <!-- CHASSI -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Chassi</label>
+                            <input type="text" id="chassi" placeholder="Ex: 9BWZZZ377VT004251" maxlength="17" style="text-transform:uppercase;letter-spacing:0.05em" oninput="this.value=this.value.toUpperCase()" class="w-full">
+                        </div>
+
+                        <!-- CÂMBIO -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Câmbio*</label>
+                            <select id="cambio" required class="w-full">
+                                <option value="">Selecione</option>
+                                <option value="Manual">Manual</option>
+                                <option value="Automático">Automático</option>
+                                <option value="Automatizado">Automatizado</option>
+                                <option value="CVT">CVT</option>
+                            </select>
+                        </div>
+
+                        <!-- COMBUSTÍVEL -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Combustível*</label>
+                            <select id="combustivel" required class="w-full">
+                                <option value="">Selecione</option>
+                                <option value="Flex">Flex</option>
+                                <option value="Gasolina">Gasolina</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Elétrico">Elétrico</option>
+                                <option value="Híbrido">Híbrido</option>
+                                <option value="GNV">GNV</option>
+                            </select>
+                        </div>
+
+                        <!-- VALOR COMPRA -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Valor de Compra*</label>
+                            <div style="position:relative">
+                                <input type="text" id="valor_compra" required placeholder="R$ 0,00"
+                                    oninput="mascaraMoeda(this)" class="w-full" style="padding-left:42px">
+                                <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none">R$</span>
+                            </div>
+                        </div>
+
+                        <!-- CUSTOS ADICIONAIS -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Custos Adicionais</label>
+                            <div style="position:relative">
+                                <input type="text" id="custos_adicionais" placeholder="R$ 0,00"
+                                    oninput="mascaraMoeda(this)" class="w-full" style="padding-left:42px">
+                                <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none">R$</span>
+                            </div>
+                        </div>
+
+                        <!-- VALOR ANUNCIADO -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Valor Anunciado*</label>
+                            <div style="position:relative">
+                                <input type="text" id="valor_anunciado" required placeholder="R$ 0,00"
+                                    oninput="mascaraMoeda(this)" class="w-full" style="padding-left:42px">
+                                <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none">R$</span>
+                            </div>
+                        </div>
+
+                        <!-- STATUS -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Status*</label>
+                            <select id="status" required class="w-full">
+                                <option value="Disponível">✅ Disponível</option>
+                                <option value="Reservado">🟡 Reservado</option>
+                                <option value="Pausado">⏸️ Pausado</option>
+                                <option value="Vendido">✔️ Vendido</option>
+                            </select>
+                        </div>
                         <div class="flex items-center gap-3 mt-2">
-                            <label class="block text-sm font-medium text-gray-700">Destaque</label>
+                            <label class="block text-sm font-medium text-slate-200">Destaque</label>
                             <button type="button" id="btnDestaque" onclick="toggleDestaque()"
                                 class="relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 bg-gray-300"
                                 aria-pressed="false">
@@ -378,11 +587,11 @@
                             <input type="hidden" id="destaque" value="NAO">
                         </div>
                     </div>
-                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
-                        <textarea id="descricao" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></textarea></div>
+                    <div><label class="block text-sm font-medium text-slate-200 mb-2">Descrição</label>
+                        <textarea id="descricao" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2  focus:border-transparent"></textarea></div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Opcionais</label>
-                        <div class="border border-gray-300 rounded-lg p-4 max-h-64 overflow-y-auto">
+                        <label class="block text-sm font-medium text-slate-200 mb-2">Opcionais</label>
+                        <div style="border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;max-height:256px;overflow-y:auto;background:var(--dark-3)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="opcionaisGrid">
                                 <!-- Será preenchido via JS -->
                             </div>
@@ -390,43 +599,43 @@
                         <input type="hidden" id="opcionais">
                     </div>
                     <div id="uploadSection">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fotos do Veículo</label>
+                        <label class="block text-sm font-medium text-slate-200 mb-2">Fotos do Veículo</label>
                         <div id="dropzone" class="dropzone rounded-lg p-8 text-center" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
                             <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto mb-4 text-gray-400"></i>
-                            <p class="text-gray-600 font-medium">Arraste as fotos aqui ou clique para selecionar</p>
+                            <p style="color:var(--text-muted)" class=" font-medium">Arraste as fotos aqui ou clique para selecionar</p>
                             <p class="text-sm text-gray-400 mt-2">JPG, PNG até 10MB cada</p>
                         </div>
                         <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
                         <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
                     </div>
-                    <div class="flex justify-end space-x-3 pt-6 border-t">
-                        <button type="button" onclick="fecharModalVeiculo()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">Cancelar</button>
-                        <button type="submit" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium shadow-md">Salvar Veículo</button>
+                    <div style="display:flex;justify-content:flex-end;gap:12px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.07)">
+                        <button type="button" onclick="fecharModalVeiculo()" class="btn-outline px-6 py-3 font-medium">Cancelar</button>
+                        <button type="submit" class="px-6 py-3 btn-gold text-dark rounded-lg hover:bg-purple-700 transition font-medium shadow-md">Salvar Veículo</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div id="modalDespesa" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay">
-        <div class="bg-white rounded-xl max-w-md w-full shadow-2xl">
+    <div id="modalDespesa" class="hidden fixed inset-0 z-50 modal-overlay" style="background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px">
+        <div class="modal-card" style="max-width:448px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
             <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-800">Adicionar Despesa</h3>
+                <h3 class="text-xl font-bold text-white">Adicionar Despesa</h3>
                 <button onclick="fecharModalDespesa()" class="p-2 hover:bg-gray-100 rounded-lg transition"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-6">
                 <form id="formDespesa" onsubmit="salvarDespesa(event)" class="space-y-4">
-                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Descrição*</label>
-                        <input type="text" id="despesa_descricao" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
-                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Categoria*</label>
-                        <select id="despesa_categoria" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                    <div><label class="block text-sm font-medium text-slate-200 mb-2">Descrição*</label>
+                        <input type="text" id="despesa_descricao" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2  focus:border-transparent"></div>
+                    <div><label class="block text-sm font-medium text-slate-200 mb-2">Categoria*</label>
+                        <select id="despesa_categoria" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2  focus:border-transparent">
                             <option value="">Selecione</option><option value="Aluguel">Aluguel</option><option value="Água">Água</option><option value="Luz">Luz</option><option value="Internet">Internet</option><option value="Marketing">Marketing</option><option value="Outros">Outros</option>
                         </select></div>
-                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Valor*</label>
-                        <input type="number" id="despesa_valor" required step="0.01" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></div>
+                    <div><label class="block text-sm font-medium text-slate-200 mb-2">Valor*</label>
+                        <input type="number" id="despesa_valor" required step="0.01" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2  focus:border-transparent"></div>
                     <div class="flex justify-end space-x-3 pt-4 border-t">
-                        <button type="button" onclick="fecharModalDespesa()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancelar</button>
-                        <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">Salvar</button>
+                        <button type="button" onclick="fecharModalDespesa()" class="btn-outline px-6 py-2">Cancelar</button>
+                        <button type="submit" class="px-6 py-2 btn-gold text-dark rounded-lg hover:bg-purple-700 transition">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -435,10 +644,10 @@
 
     <div id="toastContainer"></div>
 
-    <div id="modalCliente" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay">
-        <div class="bg-white rounded-xl max-w-lg w-full shadow-2xl">
+    <div id="modalCliente" class="hidden fixed inset-0 z-50 modal-overlay" style="background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px">
+        <div class="modal-card" style="max-width:512px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
             <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-800" id="modalClienteTitulo">Adicionar Cliente</h3>
+                <h3 class="text-xl font-bold text-white" id="modalClienteTitulo">Adicionar Cliente</h3>
                 <button onclick="fecharModalCliente()" class="p-2 hover:bg-gray-100 rounded-lg transition"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-6">
@@ -446,37 +655,55 @@
                     <input type="hidden" id="clienteId">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome Completo*</label>
-                            <input type="text" id="cliente_nome" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Nome Completo*</label>
+                            <input type="text" id="cliente_nome" required class="w-full px-4 py-2 rounded-lg" placeholder="Nome completo do cliente">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">CPF</label>
-                            <input type="text" id="cliente_cpf" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="000.000.000-00">
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">CPF</label>
+                            <input type="text" id="cliente_cpf" class="w-full px-4 py-2 rounded-lg" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
-                            <input type="text" id="cliente_telefone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="(34) 99999-9999">
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Telefone</label>
+                            <input type="text" id="cliente_telefone" class="w-full px-4 py-2 rounded-lg" placeholder="(00) 00000-0000" maxlength="15" oninput="mascaraTelefone(this)">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-                            <input type="email" id="cliente_email" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">E-mail</label>
+                            <input type="email" id="cliente_email" class="w-full px-4 py-2 rounded-lg" placeholder="email@exemplo.com">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Cidade</label>
-                            <input type="text" id="cliente_cidade" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Estado</label>
+                            <select id="cliente_estado" class="w-full px-4 py-2 rounded-lg" onchange="carregarCidades()">
+                                <option value="">Selecione o estado</option>
+                                <option value="AC">Acre</option><option value="AL">Alagoas</option>
+                                <option value="AP">Amapá</option><option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option><option value="CE">Ceará</option>
+                                <option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option><option value="MA">Maranhão</option>
+                                <option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option><option value="PA">Pará</option>
+                                <option value="PB">Paraíba</option><option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option><option value="PI">Piauí</option>
+                                <option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option><option value="RO">Rondônia</option>
+                                <option value="RR">Roraima</option><option value="SC">Santa Catarina</option>
+                                <option value="SP">São Paulo</option><option value="SE">Sergipe</option>
+                                <option value="TO">Tocantins</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                            <input type="text" id="cliente_estado" maxlength="2" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="MG">
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Cidade</label>
+                            <select id="cliente_cidade" class="w-full px-4 py-2 rounded-lg">
+                                <option value="">Selecione o estado primeiro</option>
+                            </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
-                            <textarea id="cliente_observacoes" rows="2" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent"></textarea>
+                            <label class="block text-sm font-medium mb-2" style="color:var(--text-muted)">Observações</label>
+                            <textarea id="cliente_observacoes" rows="2" class="w-full px-4 py-2 rounded-lg"></textarea>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 pt-4 border-t">
-                        <button type="button" onclick="fecharModalCliente()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancelar</button>
-                        <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">Salvar</button>
+                        <button type="button" onclick="fecharModalCliente()" class="btn-outline px-6 py-2">Cancelar</button>
+                        <button type="submit" class="px-6 py-2 btn-gold text-dark rounded-lg hover:bg-purple-700 transition">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -522,6 +749,9 @@ const MARCAS_MODELOS = {
             verificarAutenticacao();
             popularMarcas();
             carregarDados();
+            // Restaurar aba salva no localStorage
+            const abaSalva = localStorage.getItem('admin_aba_atual') || 'dashboard';
+            mostrarAba(abaSalva);
             lucide.createIcons();
         });
 
@@ -549,6 +779,7 @@ const MARCAS_MODELOS = {
                     document.getElementById('statVendidos').textContent = d.veiculosVendidos;
                     document.getElementById('statLucro').textContent = formatarMoeda(d.lucroTotal);
                     document.getElementById('statLeads').textContent = d.totalLeads;
+                    renderizarGraficos(result.data);
                 }
             } catch (e) { console.error('Erro ao carregar dashboard:', e); }
         }
@@ -560,6 +791,9 @@ const MARCAS_MODELOS = {
                 if (result.success) {
                     todosVeiculos = result.data;
                     renderizarVeiculos();
+                    // Atualizar gráfico de vendas com dados reais
+                    const dashEl = document.getElementById('graficoVendas');
+                    if (dashEl) renderizarGraficos(null);
                 }
             } catch (e) { mostrarToast('Erro ao carregar veículos', 'error'); }
         }
@@ -583,30 +817,31 @@ const MARCAS_MODELOS = {
                 return;
             }
             lista.innerHTML = todosVeiculos.map(v => `
-                <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition">
+                <div class="border  rounded-lg overflow-hidden hover:shadow-md transition" style="border-color:rgba(255,255,255,0.07)">
                     <div class="p-4 flex gap-4">
                         <img src="${converterImagem(v.imagem_principal)}" 
                              alt="${v.marca} ${v.modelo}" 
                              class="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                              onerror="this.src='https://placehold.co/96x96/e2e8f0/94a3b8?text=Sem+Foto'">
                         <div class="flex-1">
-                            <h4 class="font-bold text-lg text-gray-800">${v.marca} ${v.modelo} ${v.ano}</h4>
+                            <h4 class="font-bold text-lg text-white">${v.marca} ${v.modelo} ${v.ano}</h4>
                             <p class="text-sm text-gray-600">${formatarKm(v.km)} km • ${v.cambio} • ${v.combustivel}</p>
-                            <p class="text-purple-600 font-bold text-lg mt-1">${formatarMoeda(v.valor_anunciado)}</p>
+                            <p class=" font-bold text-lg mt-1" style="color:var(--gold)">${formatarMoeda(v.valor_anunciado)}</p>
                             <div class="flex gap-2 mt-2 flex-wrap">
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${v.status==='Disponível'?'bg-green-100 text-green-800':v.status==='Vendido'?'bg-blue-100 text-blue-800':'bg-yellow-100 text-yellow-800'}">${v.status}</span>
-                                ${v.destaque ? '<span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">⭐ Destaque</span>' : ''}
+                                <span class="badge ${v.status==='Disponível'?'badge-green':v.status==='Vendido'?'badge-blue':v.status==='Pausado'?'badge-gray':'badge-yellow'}" style="${v.status==='Pausado'?'background:rgba(148,163,184,0.12);color:#94a3b8':''}">${v.status}${v.status==='Pausado'?' ⏸️':''}</span>
+                                ${v.tipo==='Moto'?'<span class=\"badge\" style=\"background:rgba(251,146,60,0.12);color:#fb923c;margin-left:4px\">🏍️ Moto</span>':''}
+                                ${v.destaque ? '<span class="badge badge-gold">⭐ Destaque</span>' : ''}
                             </div>
                         </div>
                     </div>
-                    <div class="border-t border-gray-100 px-4 py-3 flex gap-2">
-                        <button onclick="verVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 transition text-sm font-medium">
+                    <div class="border-t  px-4 py-3 flex gap-2" style="border-color:rgba(255,255,255,0.07)">
+                        <button onclick="verVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border   hover:bg-purple-50 transition text-sm font-medium" style="border-color:rgba(201,168,76,0.2)" style="color:var(--gold)">
                             <i data-lucide="eye" class="w-4 h-4"></i>Ver
                         </button>
-                        <button onclick="editarVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-medium">
+                        <button onclick="editarVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border  text-slate-200 hover:bg-gray-50 transition text-sm font-medium" style="border-color:rgba(255,255,255,0.07)">
                             <i data-lucide="edit" class="w-4 h-4"></i>Editar
                         </button>
-                        <button onclick="excluirVeiculo(${v.id})" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition text-sm font-medium">
+                        <button onclick="excluirVeiculo(${v.id})" class="btn-danger flex items-center gap-2 px-4 py-2 text-sm font-medium">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>Excluir
                         </button>
                     </div>
@@ -628,8 +863,12 @@ const MARCAS_MODELOS = {
             
             imagensSelecionadas = [];
             document.getElementById('previewContainer').innerHTML = '';
+            document.getElementById('tipo').value = 'Carro';
+            document.getElementById('ano_modelo').value = '';
+            document.getElementById('chassi').value = '';
             // Resetar toggle destaque
             setDestaque('NAO');
+            carregarMarcasFipe();
             document.getElementById('modalVeiculo').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -652,17 +891,29 @@ const MARCAS_MODELOS = {
             }
             document.getElementById('veiculoPastaId').value = pastaIdEdit;
             console.log('Editando veículo ID:', veiculo.id, 'PastaID:', pastaIdEdit);
-            document.getElementById('marca').value = veiculo.marca;
+            // Carregar marcas e setar valor
+            await carregarMarcasFipe();
+            document.getElementById('marca').value = veiculo.marca || '';
+            // Carregar modelos para essa marca e setar
+            if (veiculo.marca) {
+                await carregarModelosFipe();
+                document.getElementById('modelo').value = veiculo.modelo || '';
+            }
             document.getElementById('modelo').value = veiculo.modelo;
             document.getElementById('ano').value = veiculo.ano;
-            document.getElementById('km').value = veiculo.km;
-            document.getElementById('cor').value = veiculo.cor;
+            document.getElementById('km').value = veiculo.km ? Number(veiculo.km).toLocaleString('pt-BR') : '';
+            document.getElementById('cor').value = veiculo.cor || '';
             document.getElementById('placa').value = veiculo.placa || '';
+            document.getElementById('chassi').value = veiculo.chassi || '';
+            document.getElementById('tipo').value = veiculo.tipo || 'Carro';
+            document.getElementById('ano_modelo').value = veiculo.ano_modelo || '';
             document.getElementById('cambio').value = veiculo.cambio;
             document.getElementById('combustivel').value = veiculo.combustivel;
-            document.getElementById('valor_compra').value = veiculo.valor_compra;
-            document.getElementById('custos_adicionais').value = veiculo.custos_adicionais || 0;
-            document.getElementById('valor_anunciado').value = veiculo.valor_anunciado;
+            // Popular campos com máscara
+            const fmt = v => v ? Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+            document.getElementById('valor_compra').value = fmt(veiculo.valor_compra);
+            document.getElementById('custos_adicionais').value = fmt(veiculo.custos_adicionais || 0);
+            document.getElementById('valor_anunciado').value = fmt(veiculo.valor_anunciado);
             document.getElementById('status').value = veiculo.status;
             document.getElementById('descricao').value = veiculo.descricao || '';
             // Popular opcionais e marcar os salvos
@@ -678,18 +929,24 @@ const MARCAS_MODELOS = {
 
         async function salvarVeiculo(e) {
             e.preventDefault();
+            // Desmascarar valores monetários e km
+            const desmascararMoeda = id => parseFloat((document.getElementById(id).value||'0').replace(/[R$\s.]/g,'').replace(',','.')) || 0;
+            const desmascararKm = id => parseInt((document.getElementById(id).value||'0').replace(/\D/g,'')) || 0;
             const dados = {
+                tipo: document.getElementById('tipo').value,
                 marca: document.getElementById('marca').value,
                 modelo: document.getElementById('modelo').value,
-                ano: document.getElementById('ano').value,
-                km: document.getElementById('km').value,
+                ano: parseInt(document.getElementById('ano').value) || null,
+                ano_modelo: parseInt(document.getElementById('ano_modelo').value) || null,
+                km: desmascararKm('km'),
                 cor: document.getElementById('cor').value,
-                placa: document.getElementById('placa').value,
+                placa: document.getElementById('placa').value.toUpperCase(),
+                chassi: document.getElementById('chassi').value.toUpperCase() || null,
                 cambio: document.getElementById('cambio').value,
                 combustivel: document.getElementById('combustivel').value,
-                valor_compra: document.getElementById('valor_compra').value,
-                custos_adicionais: document.getElementById('custos_adicionais').value || 0,
-                valor_anunciado: document.getElementById('valor_anunciado').value,
+                valor_compra: desmascararMoeda('valor_compra'),
+                custos_adicionais: desmascararMoeda('custos_adicionais') || 0,
+                valor_anunciado: desmascararMoeda('valor_anunciado'),
                 status: document.getElementById('status').value,
                 descricao: document.getElementById('descricao').value,
                 opcionais: document.getElementById('opcionais').value,
@@ -870,8 +1127,8 @@ const MARCAS_MODELOS = {
             const st = document.getElementById('det_status');
             st.textContent = vFull.status || '';
             st.className = 'px-4 py-2 rounded-full text-sm font-semibold ' +
-                (vFull.status === 'Disponível' ? 'bg-green-100 text-green-800' :
-                 vFull.status === 'Vendido' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800');
+                (vFull.status === 'Disponível' ? 'badge badge-green' :
+                 vFull.status === 'Vendido' ? 'badge badge-blue' : 'badge badge-yellow');
 
             // Destaque
             const bd = document.getElementById('det_badgeDestaque');
@@ -915,7 +1172,7 @@ const MARCAS_MODELOS = {
                 const itens = vFull.opcionais.split(',').map(s => s.trim()).filter(Boolean);
                 if (itens.length) {
                     document.getElementById('det_opcionais').innerHTML = itens.map(o =>
-                        `<span class="bg-purple-50 border border-purple-200 text-purple-700 px-3 py-1 rounded-full text-sm">${o}</span>`
+                        `<span class="bg-purple-50 border   px-3 py-1 rounded-full text-sm" style="border-color:rgba(201,168,76,0.2)" style="color:var(--gold)">${o}</span>`
                     ).join('');
                     document.getElementById('det_secaoOpcionais').classList.remove('hidden');
                 }
@@ -1037,7 +1294,7 @@ const MARCAS_MODELOS = {
                 <div class="relative group">
                     <img src="${img.base64}" class="preview-img shadow-md">
                     <button type="button" onclick="removerImagem(${idx})" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition">×</button>
-                    ${img.isPrincipal ? '<span class="absolute bottom-2 left-2 bg-purple-600 text-white text-xs px-3 py-1 rounded-full shadow-md font-semibold">Principal</span>' : ''}
+                    ${img.isPrincipal ? '<span class="absolute bottom-2 left-2 btn-gold text-dark text-xs px-3 py-1 rounded-full shadow-md font-semibold">Principal</span>' : ''}
                 </div>
             `).join('');
         }
@@ -1068,14 +1325,14 @@ const MARCAS_MODELOS = {
                 return;
             }
             lista.innerHTML = todosLeads.map(l => `
-                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="border  rounded-lg p-4 hover:shadow-md transition" style="border-color:rgba(255,255,255,0.07)">
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
-                            <h4 class="font-bold text-gray-800">${l.veiculo_interesse}</h4>
+                            <h4 class="font-bold text-white">${l.veiculo_interesse}</h4>
                             <p class="text-sm text-gray-600 mt-1">${l.telefone || 'Sem telefone'}</p>
                             <p class="text-xs text-gray-400 mt-1">${new Date(l.data_hora).toLocaleString('pt-BR')}</p>
                         </div>
-                        <select onchange="atualizarStatusLead(${l.id}, this.value)" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                        <select onchange="atualizarStatusLead(${l.id}, this.value)" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2  focus:border-transparent">
                             <option value="Novo" ${l.status==='Novo'?'selected':''}>Novo</option>
                             <option value="Contatado" ${l.status==='Contatado'?'selected':''}>Contatado</option>
                             <option value="Negociando" ${l.status==='Negociando'?'selected':''}>Negociando</option>
@@ -1122,10 +1379,10 @@ const MARCAS_MODELOS = {
                 return;
             }
             lista.innerHTML = todosClientes.map(c => `
-                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="border  rounded-lg p-4 hover:shadow-md transition" style="border-color:rgba(255,255,255,0.07)">
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
-                            <h4 class="font-bold text-lg text-gray-800">${c.nome}</h4>
+                            <h4 class="font-bold text-lg text-white">${c.nome}</h4>
                             <div class="grid grid-cols-2 gap-x-6 mt-2">
                                 ${c.cpf ? `<p class="text-sm text-gray-600 flex items-center gap-1"><i data-lucide="credit-card" class="w-4 h-4"></i>${c.cpf}</p>` : ''}
                                 ${c.telefone ? `<p class="text-sm text-gray-600 flex items-center gap-1"><i data-lucide="phone" class="w-4 h-4"></i>${c.telefone}</p>` : ''}
@@ -1155,7 +1412,7 @@ const MARCAS_MODELOS = {
             document.getElementById('modalCliente').classList.add('hidden');
         }
 
-        function editarCliente(id) {
+        async function editarCliente(id) {
             const cliente = todosClientes.find(c => c.id === id);
             if (!cliente) return;
             document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
@@ -1165,7 +1422,14 @@ const MARCAS_MODELOS = {
             document.getElementById('cliente_telefone').value = cliente.telefone || '';
             document.getElementById('cliente_email').value = cliente.email || '';
             document.getElementById('cliente_cidade').value = cliente.cidade || '';
-            document.getElementById('cliente_estado').value = cliente.estado || '';
+            // Popular estado e carregar cidades
+            const selEstado = document.getElementById('cliente_estado');
+            selEstado.value = cliente.estado || '';
+            if (cliente.estado) {
+                await carregarCidades(cliente.cidade || '');
+            } else {
+                document.getElementById('cliente_cidade').innerHTML = '<option value="">Selecione o estado primeiro</option>';
+            }
             document.getElementById('cliente_observacoes').value = cliente.observacoes || '';
             document.getElementById('modalCliente').classList.remove('hidden');
             lucide.createIcons();
@@ -1180,7 +1444,7 @@ const MARCAS_MODELOS = {
                 telefone: document.getElementById('cliente_telefone').value,
                 email: document.getElementById('cliente_email').value,
                 cidade: document.getElementById('cliente_cidade').value,
-                estado: document.getElementById('cliente_estado').value,
+                estado: document.getElementById('cliente_estado').value || document.getElementById('cliente_estado').options[document.getElementById('cliente_estado').selectedIndex]?.text || '',
                 observacoes: document.getElementById('cliente_observacoes').value
             };
             try {
@@ -1233,11 +1497,11 @@ const MARCAS_MODELOS = {
                 return;
             }
             lista.innerHTML = todasDespesas.map(d => `
-                <div class="border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-md transition">
+                <div class="border  rounded-lg p-4 flex justify-between items-center hover:shadow-md transition" style="border-color:rgba(255,255,255,0.07)">
                     <div>
-                        <h4 class="font-bold text-gray-800">${d.descricao}</h4>
+                        <h4 class="font-bold text-white">${d.descricao}</h4>
                         <p class="text-sm text-gray-600">${d.categoria}</p>
-                        <p class="text-purple-600 font-bold text-lg mt-1">${formatarMoeda(d.valor)}</p>
+                        <p class=" font-bold text-lg mt-1" style="color:var(--gold)">${formatarMoeda(d.valor)}</p>
                     </div>
                     <button onclick="excluirDespesa(${d.id})" class="p-3 hover:bg-red-100 text-red-600 rounded-lg transition"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                 </div>
@@ -1289,11 +1553,22 @@ const MARCAS_MODELOS = {
 
         function mostrarAba(aba) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${aba}`).classList.add('active');
+            const tabEl = document.getElementById(`tab-${aba}`);
+            if (tabEl) tabEl.classList.add('active');
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            document.querySelector(`[data-tab="${aba}"]`).classList.add('active');
-            const titulos = {dashboard: 'Dashboard', veiculos: 'Veículos', leads: 'Leads', despesas: 'Despesas', clientes: 'Clientes'};
-            document.getElementById('tituloAba').textContent = titulos[aba];
+            const menuEl = document.querySelector(`[data-tab="${aba}"]`);
+            if (menuEl) menuEl.classList.add('active');
+            const titulos = {dashboard: 'Dashboard', veiculos: 'Veículos', leads: 'Leads', despesas: 'Despesas', clientes: 'Clientes', detalhes: 'Detalhes'};
+            const titulo = document.getElementById('tituloAba');
+            if (titulo) titulo.textContent = titulos[aba] || aba;
+            localStorage.setItem('admin_aba_atual', aba);
+            // Fechar sidebar no mobile ao trocar de aba
+            if (window.innerWidth < 1024) {
+                const sb = document.getElementById('sidebar');
+                const ov = document.getElementById('sidebarOverlay');
+                if (sb) sb.classList.remove('open');
+                if (ov) ov.style.display = 'none';
+            }
             lucide.createIcons();
         }
 
@@ -1309,7 +1584,7 @@ const MARCAS_MODELOS = {
         function mostrarToast(msg, tipo) {
             const cores = {success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500'};
             const toast = document.createElement('div');
-            toast.className = `toast ${cores[tipo] || 'bg-gray-500'} text-white px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-3`;
+            const coresMap = {success:'#16a34a',error:'#dc2626',info:'#2563eb'}; toast.style.background = coresMap[tipo] || '#374151'; toast.className = 'toast';
             toast.innerHTML = `<i data-lucide="${tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'alert-circle' : 'info'}" class="w-5 h-5"></i><span>${msg}</span>`;
             document.getElementById('toastContainer').appendChild(toast);
             lucide.createIcons();
@@ -1334,8 +1609,8 @@ const MARCAS_MODELOS = {
                            value="${op}"
                            onchange="atualizarOpcionais()"
                            ${marcados.includes(op) ? 'checked' : ''}
-                           class="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-600">
-                    <span class="text-sm text-gray-700">${op}</span>
+                           class="w-4 h-4  rounded focus:ring-2 " style="color:var(--gold)">
+                    <span class="text-sm text-slate-200">${op}</span>
                 </label>
             `).join('');
             // Sincronizar campo hidden
@@ -1370,31 +1645,251 @@ const MARCAS_MODELOS = {
             datalist.innerHTML = modelos.map(m => `<option value="${m}">`).join('');
         }
 
+        // ── Máscaras Veículo ──
+        function mascaraMoeda(input) {
+            let v = input.value.replace(/\D/g, '');
+            if (!v) { input.value = ''; return; }
+            v = (parseInt(v) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            input.value = v;
+        }
+
+        function mascaraKm(input) {
+            let v = input.value.replace(/\D/g, '');
+            if (!v) { input.value = ''; return; }
+            input.value = parseInt(v).toLocaleString('pt-BR');
+        }
+
+        function atualizarTipoVeiculo() {
+            // Quando tipo = Moto, câmbio tem opções diferentes
+            const tipo = document.getElementById('tipo').value;
+            const cambio = document.getElementById('cambio');
+            if (tipo === 'Moto') {
+                cambio.innerHTML = `
+                    <option value="">Selecione</option>
+                    <option value="Manual">Manual</option>
+                    <option value="Automático">Automático</option>
+                    <option value="Semi-automático">Semi-automático</option>`;
+            } else {
+                cambio.innerHTML = `
+                    <option value="">Selecione</option>
+                    <option value="Manual">Manual</option>
+                    <option value="Automático">Automático</option>
+                    <option value="Automatizado">Automatizado</option>
+                    <option value="CVT">CVT</option>`;
+            }
+        }
+
+        function mascaraPlaca(input) {
+            let v = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 7);
+            if (v.length > 3) v = v.slice(0, 3) + '-' + v.slice(3);
+            input.value = v;
+        }
+
+        // ── FIPE API — Marcas e Modelos ──
+        let _fipeMarcas = [];
+        async function carregarMarcasFipe() {
+            const sel = document.getElementById('marca');
+            const loading = document.getElementById('marcaLoading');
+            if (_fipeMarcas.length) { popularSelectMarcas(); return; }
+            if (loading) loading.style.display = 'inline';
+            try {
+                const r = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas');
+                _fipeMarcas = await r.json();
+                popularSelectMarcas();
+            } catch(e) {
+                // fallback para lista local
+                _fipeMarcas = [
+                    {codigo:'21',nome:'Chevrolet'},{codigo:'22',nome:'Citroën'},{codigo:'23',nome:'Fiat'},
+                    {codigo:'24',nome:'Ford'},{codigo:'25',nome:'Honda'},{codigo:'26',nome:'Hyundai'},
+                    {codigo:'27',nome:'Jeep'},{codigo:'28',nome:'Kia'},{codigo:'29',nome:'Mercedes-Benz'},
+                    {codigo:'30',nome:'Mitsubishi'},{codigo:'31',nome:'Nissan'},{codigo:'32',nome:'Peugeot'},
+                    {codigo:'33',nome:'Renault'},{codigo:'34',nome:'Toyota'},{codigo:'35',nome:'Volkswagen'},
+                    {codigo:'36',nome:'BMW'},{codigo:'37',nome:'Audi'},{codigo:'38',nome:'BYD'},
+                    {codigo:'39',nome:'Caoa Chery'},{codigo:'40',nome:'GWM'},
+                ].map(m => ({codigo: m.codigo, nome: m.nome}));
+                popularSelectMarcas();
+            }
+            if (loading) loading.style.display = 'none';
+        }
+
+        function popularSelectMarcas() {
+            const sel = document.getElementById('marca');
+            const valorAtual = sel.value;
+            sel.innerHTML = '<option value="">Selecione a marca</option>' +
+                _fipeMarcas.map(m => `<option value="${m.nome}" data-cod="${m.codigo}">${m.nome}</option>`).join('');
+            if (valorAtual) sel.value = valorAtual;
+        }
+
+        async function carregarModelosFipe() {
+            const selMarca = document.getElementById('marca');
+            const selModelo = document.getElementById('modelo');
+            const opt = selMarca.options[selMarca.selectedIndex];
+            const cod = opt ? opt.getAttribute('data-cod') : null;
+            selModelo.innerHTML = '<option value="">Carregando modelos...</option>';
+            if (!cod) { selModelo.innerHTML = '<option value="">Selecione a marca primeiro</option>'; return; }
+            try {
+                const r = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${cod}/modelos`);
+                const data = await r.json();
+                const modelos = data.modelos || [];
+                selModelo.innerHTML = '<option value="">Selecione o modelo</option>' +
+                    modelos.map(m => `<option value="${m.nome}">${m.nome}</option>`).join('');
+            } catch(e) {
+                // fallback
+                const fallback = MARCAS_MODELOS[selMarca.value] || [];
+                selModelo.innerHTML = '<option value="">Selecione o modelo</option>' +
+                    fallback.map(m => `<option value="${m}">${m}</option>`).join('');
+            }
+        }
+
+        // Sobrescrever popularMarcas para usar FIPE
+        function popularMarcas() { carregarMarcasFipe(); }
+
+        // ── Máscaras CPF/Telefone ──
+        function mascaraCPF(input) {
+            let v = input.value.replace(/\D/g, '').slice(0, 11);
+            if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+            else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+            else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+            input.value = v;
+        }
+        function mascaraTelefone(input) {
+            let v = input.value.replace(/\D/g, '').slice(0, 11);
+            if (v.length === 11) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            else if (v.length >= 10) v = v.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+            else if (v.length > 6) v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+            else if (v.length > 2) v = v.replace(/(\d{2})(\d*)/, '($1) $2');
+            input.value = v;
+        }
+
+        // ── Cidades por Estado (via IBGE API) ──
+        async function carregarCidades(cidadeSelecionada = '') {
+            const uf = document.getElementById('cliente_estado').value;
+            const sel = document.getElementById('cliente_cidade');
+            sel.innerHTML = '<option value="">Carregando...</option>';
+            if (!uf) { sel.innerHTML = '<option value="">Selecione o estado primeiro</option>'; return; }
+            try {
+                const r = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios?orderBy=nome`);
+                const cidades = await r.json();
+                sel.innerHTML = '<option value="">Selecione a cidade</option>' +
+                    cidades.map(c => `<option value="${c.nome}" ${c.nome === cidadeSelecionada ? 'selected' : ''}>${c.nome}</option>`).join('');
+            } catch(e) {
+                sel.innerHTML = '<option value="">Erro ao carregar cidades</option>';
+            }
+        }
+
+        // ── Gráficos do Dashboard ──
+        let chartVendas = null, chartStatus = null;
+
+        function renderizarGraficos(dadosDash) {
+            if (typeof Chart === 'undefined') return;
+            Chart.defaults.color = '#8A91A8';
+            Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+
+            // Gráfico 1: Vendas por mês (últimos 6 meses)
+            const ctxV = document.getElementById('graficoVendas')?.getContext('2d');
+            if (ctxV) {
+                if (chartVendas) chartVendas.destroy();
+                const meses = [];
+                const vendas = [];
+                const agora = new Date();
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+                    meses.push(d.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'}));
+                    // Contar veículos vendidos nesse mês baseado nos dados disponíveis
+                    vendas.push(Math.floor(Math.random() * 5) + 1); // placeholder — será substituído por dados reais abaixo
+                }
+                // Usar dados reais se disponíveis
+                const veiculosVendidos = todosVeiculos?.filter(v => v.status === 'Vendido') || [];
+                const contagemMes = {};
+                veiculosVendidos.forEach(v => {
+                    if (v.data_venda) {
+                        const d = new Date(v.data_venda);
+                        const key = d.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'});
+                        contagemMes[key] = (contagemMes[key] || 0) + 1;
+                    }
+                });
+                const vendasReais = meses.map(m => contagemMes[m] || 0);
+                chartVendas = new Chart(ctxV, {
+                    type: 'bar',
+                    data: {
+                        labels: meses,
+                        datasets: [{
+                            label: 'Vendas',
+                            data: vendasReais,
+                            backgroundColor: 'rgba(201,168,76,0.25)',
+                            borderColor: '#C9A84C',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // Gráfico 2: Status dos veículos (donut)
+            const ctxS = document.getElementById('graficoStatus')?.getContext('2d');
+            if (ctxS && dadosDash) {
+                if (chartStatus) chartStatus.destroy();
+                const estoque = dadosDash.resumo.totalEstoque || 0;
+                const vendidos = dadosDash.resumo.veiculosVendidos || 0;
+                const reservados = (todosVeiculos?.filter(v => v.status === 'Reservado') || []).length;
+                const pausados = (todosVeiculos?.filter(v => v.status === 'Pausado') || []).length;
+                chartStatus = new Chart(ctxS, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Disponíveis', 'Vendidos', 'Reservados', 'Pausados'],
+                        datasets: [{
+                            data: [estoque, vendidos, reservados, pausados],
+                            backgroundColor: ['rgba(96,165,250,0.8)', 'rgba(74,222,128,0.8)', 'rgba(250,204,21,0.8)', 'rgba(148,163,184,0.8)'],
+                            borderColor: ['#60a5fa','#4ade80','#facc15','#94a3b8'],
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+
+            // Veículos parados
+            const parados = dadosDash?.veiculosParados || [];
+            const listaParados = document.getElementById('listaParados');
+            if (listaParados) {
+                if (!parados.length) {
+                    listaParados.innerHTML = '<p style="color:var(--text-muted)">✅ Nenhum veículo parado há mais de 60 dias.</p>';
+                } else {
+                    listaParados.innerHTML = parados.map(v => `
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                            <span>${v.marca} ${v.modelo} ${v.ano}</span>
+                            <span style="color:#facc15;font-size:0.8rem">${Math.floor((Date.now() - new Date(v.created_at)) / 86400000)} dias</span>
+                        </div>`).join('');
+                }
+            }
+        }
+
         function toggleSidebar() {
-            console.log('Toggle sidebar chamado');
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            if (!sidebar) {
-                console.error('Sidebar não encontrado!');
-                return;
-            }
-            if (!overlay) {
-                console.error('Overlay não encontrado!');
-                return;
-            }
-            
+            if (!sidebar || !overlay) return;
             const isOpen = sidebar.classList.contains('open');
-            console.log('Estado atual:', isOpen ? 'aberto' : 'fechado');
-            
             if (isOpen) {
                 sidebar.classList.remove('open');
-                overlay.classList.remove('active');
+                overlay.style.display = 'none';
             } else {
                 sidebar.classList.add('open');
-                overlay.classList.add('active');
+                overlay.style.display = 'block';
             }
-            
-            console.log('Novo estado:', sidebar.classList.contains('open') ? 'aberto' : 'fechado');
         }
     </script>
 </body>
